@@ -1,235 +1,120 @@
-"""
-KnotMarker web version
-"""
+from flask import Flask, render_template, make_response, jsonify, request
+from flask.ext.mongoengine import MongoEngine
+from flask_mail import Mail
+from flask.ext.security import Security, MongoEngineUserDatastore, login_required, current_user
 
-import asyncio
-import glob
 import os
-import random
-import sqlite3
-import sys
-import uuid
-import json
-from itertools import chain
 
-# from detector_cluster import process_image
+# web.run_app(app)
 
-import aiohttp
-from aiohttp import web
-import aiohttp_jinja2
-import jinja2
+app.config['MAIL_SERVER'] = os.environ.get(
+    'KNOTMARKER_MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = os.environ.get(
+    'KNOTMARKER_MAIL_USERNAME', 'knotmarker@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get('KNOTMARKER_MAIL_PASSWORD')
 
-from aiohttp_session import get_session, session_middleware, setup as session_setup
-from aiohttp_session.cookie_storage import EncryptedCookieStorage
+mail = Mail(app)
 
+app.config["MONGODB_SETTINGS"] = {'DB': "knotmarker"}
+app.config["SECRET_KEY"] = os.environ.get('KNOTMARKER_SECRET_KEY')
+app.config["SECURITY_REGISTERABLE"] = True
+app.config["SECURITY_CONFIRMABLE"] = True
 
-ENV = os.environ
+db = MongoEngine(app)
 
-DEFAULT_SESSION_KEY = "YWJjYXNrZGphc2RmYXNkc2RhamtsanNkYWFzZGFzZGY="
-SESSION_KEY = ENV.get("KNOTMARKER_SESSION_KEY", DEFAULT_SESSION_KEY)
+from .models import User, Role, MarkedUpImage, Polygon
 
-IMAGES_PATH = ENV.get("KNOTMARKER_IMAGES_PATH", "../surface")
-DATABASE_PATH = ENV.get("KNOTMARKER_DATABASE", "knotmarker.sqlite")
-
-
-def init_session(session, request):
-    """Writes uid to session
-
-    :session: TODO
-    :returns: TODO
-
-    """
-    if session.new or "uid" not in session:
-        session['uid'] = uuid.uuid4().hex
-    if 'images_available' not in session:
-        session['images_available'] = len(request.app['images_list'])
-    return session
+user_datastore = MongoEngineUserDatastore(db, User, Role)
+security = Security(app, user_datastore)
 
 
-@aiohttp_jinja2.template('index.jinja2')
-def handle(request):
-    """ handles index page
-
-    :request: aiohttp request
-    :returns: dict of template variables
-    """
-    session = yield from get_session(request)
-    session = init_session(session, request)
-    return {
-        'defects': request.app['defects'],
-        'images_available': session['images_available']
-    }
+@app.route("/")
+@login_required
+def index():
+    return render_template('index.html', current_user=current_user)
 
 
-def select_next_image(app, uid):
-    """
-    """
-
-    curr = app["database"].cursor()
-    curr.execute(
-        'SELECT DISTINCT(image) FROM marks WHERE uid = ?',
-        (uid,))
-    last_images = set(chain.from_iterable(curr.fetchall()))
-
-    images = list(app['images_list'] - last_images)
-    if images:
-        return random.choice(images), len(images)
-    else:
-        return None, 0
+@app.route("/gallery")
+@login_required
+def gallery():
+    group_size = 4
+    page_num = int(request.args.get('page'))
+    pcs_per_page = int(request.args.get('cnt'))
+    pictures = MarkedUpImage.objects()[pcs_per_page *
+                                       (page_num - 1):pcs_per_page * page_num]
+    len_of_pictures = MarkedUpImage.objects().count()
+    pictures_groups = [pictures[x:x + group_size]
+                       for x in range(0, len(pictures), group_size)]
+    num_of_pages = len_of_pictures / pcs_per_page + 1
+    return render_template('gallery.html', current_user=current_user, pictures=pictures_groups, num_of_pages=num_of_pages, curr_num=page_num, pcs_per_page=pcs_per_page)
 
 
-def process_image(image_path):
-    """Current implementation loads file with markup
-
-    :image_path: TODO
-    :returns: TODO
-
-    """
-    image_name, _ = os.path.splitext(image_path)
-    with open(image_name + "json") as markup_f:
-        return json.load(markup_f)
+@app.route('/pic/<string:pic_id>')
+@login_required
+def edit_image(pic_id):
+    return render_template('editor.html', current_user=current_user, pic_id=pic_id)
 
 
-@asyncio.coroutine
-def websocket_endpoint(request):
-    """TODO: Docstring for websocket_endpoint.
+@app.route('/pic/<string:pic_id>/polygons', methods=['GET', 'POST'])
+@login_required
+def polygons(pic_id):
+    if request.method == 'GET':
+        image = MarkedUpImage.objects(
+            filename=pic_id, users_polygons__username=current_user.email).first()
+        res = []
 
-    :request: TODO
-    :returns: TODO
+        if image is None:
+            return jsonify({
+                'status': 'ok',
+                'polygons': res,
+                'rect': MarkedUpImage.objects(filename=pic_id).first().rect
+            })
 
-    """
-    session = yield from get_session(request)
-    ws = web.WebSocketResponse()
-    yield from ws.prepare(request)
+        for up in image.users_polygons:
+            if up.username == current_user.email:
+                res = up.polygons
+                break
 
-    app = request.app
+        return jsonify({
+            'status': 'ok',
+            'polygons': res,
+            'rect': image.rect
+        })
 
-    while not ws.closed:
-        try:
-            msg = yield from ws.receive()
-            if msg.tp == aiohttp.MsgType.text:
-                data = json.loads(msg.data)
-                if data["type"] == "requestImage":
-                    new_image, images_available = select_next_image(
-                        app, session["uid"])
-                    ws.send_str(json.dumps({
-                        "type": "imagesAvailable",
-                        "value": images_available
-                    }))
-                    if new_image is not None:
-                        with open(new_image, 'rb') as image_f:
-                            ws.send_bytes(image_f.read())
-                else:
-                    if data["type"] == "imageLoaded":
-                        defects = process_image(new_image)
-                        for defect in defects:
-                            ws.send_str(json.dumps({
-                                "type": "defect",
-                                "rect": defect
-                            }))
-                        ws.send_str(json.dumps({
-                            "type": "imageProcessed"
-                        }))
-                    else:
-                        conn = app["database"]
-                        cursor = conn.cursor()
+    polygons = MarkedUpImage.polygons(pic_id, current_user)
 
-                        cursor.execute("""
-                        insert into marks (uid, image, defect_type, x, y, width, height)
-                        values (?, ?, ?, ?, ?, ?, ?)
-                        """, [session["uid"], new_image, data["type"]] + data["defect"])
-                        conn.commit()
-        except aiohttp.errors.WSClientDisconnectedError:
-                print('ws connection closed with exception %s',
-                      ws.exception())
+    if len(polygons) == 0:
+        MarkedUpImage.image(pic_id).upsert_one(
+            add_to_set__users_polygons={'username': current_user.email})
+        polygons = MarkedUpImage.polygons(pic_id, current_user)
 
-    return ws
+    polygons.upsert_one(
+        set__users_polygons__S__polygons=to_polygons(request.json))
+    return jsonify({'status': 'ok'})
 
 
-def create_database():
-    """Create sqlite database for knotmarker
-    :returns: TODO
-
-    """
-    conn = sqlite3.connect(DATABASE_PATH)
-
-    curr = conn.cursor()
-
-    curr.execute("""
-    CREATE TABLE IF NOT EXISTS marks (
-        id INTEGER PRIMARY KEY,
-        uid TEXT,
-        image TEXT,
-        defect_type TEXT,
-        x INTEGER,
-        y INTEGER,
-        width INTEGER,
-        height INTEGER,
-        created DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    return conn
+def to_polygons(json):
+    polygons = []
+    for poly in json:
+        polygons.append(Polygon(**poly))
+    return polygons
 
 
-@asyncio.coroutine
-def on_shutdown(app):
-    """Closes all resources used by application
-
-    :app: TODO
-    :returns: TODO
-
-    """
-    conn = app['database']
-    conn.commit()
-    conn.close()
+@app.route('/pic/<string:pic_id>.png')
+def get_image(pic_id):
+    markedup_image = MarkedUpImage.image(pic_id).first()
+    image = markedup_image.image.read()
+    response = make_response(image)
+    response.headers['Content-Type'] = 'image/png'
+    return response
 
 
-def list_images(root):
-    for dirname, dirnames, filenames in os.walk(root):
-        for filename in filenames:
-            if filename.endswith('.png'):
-                yield os.path.join(dirname, filename)
-
-
-def create_app(args):
-    """Main entry point
-
-    :args: TODO
-    :returns: TODO
-
-    """
-    app = web.Application()
-
-    session_setup(app,
-                  EncryptedCookieStorage(SESSION_KEY, cookie_name='KNOTMARKER_COOKIE'))
-
-    aiohttp_jinja2.setup(app,
-                         loader=jinja2.FileSystemLoader('./templates'))
-    app['images_list'] = set(list_images(IMAGES_PATH))
-    app['defects'] = [
-        ('darken', 'd', 'Потемнение'),
-        ('knot_defect', 'f', 'Сучок с дефектами'),
-        ('knot_decay', 'y', 'Табачный сучок'),
-        ('knot_encased', 'e', 'Несросшийся сучок'),
-        ('knot_sound', 'k', 'Здоровый сучок'),
-        ('knot_pin', 'o', 'Очень маленький сучок'),
-        ('krack', 'c', 'Трещина'),
-        ('mechanical', 'm', 'Механическое повреждение'),
-        ('pith', 'p', 'Сердцевина'),
-        ('tar', 't', 'Смоляной карман'),
-        ('unknown', 'u', 'Неизвестный дефект'),
-        ('none', 'n', 'Дефекта нет'),
-        ('multiple', 'q', 'На изображении несколько дефектов'),
-    ]
-    app['database'] = create_database()
-    app.on_shutdown.append(on_shutdown)
-    app.router.add_route('GET', '/', handle, name='index')
-    app.router.add_route('*', '/ws', websocket_endpoint, name='websocket')
-    return app
-
-    # web.run_app(app)
-
-app = create_app(sys.argv[1:])
-
-if __name__ == '__main__':
-    web.run_app(app)
+@app.route('/pic/thumb/<string:pic_id>.png')
+def get_image_thumbnail(pic_id):
+    markedup_image = MarkedUpImage.image(pic_id).first()
+    image = markedup_image.image_thumb.read()
+    response = make_response(image)
+    response.headers['Content-Type'] = 'image/png'
+    return response

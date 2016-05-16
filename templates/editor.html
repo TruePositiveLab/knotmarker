@@ -1,0 +1,65 @@
+{% extends 'layouts/main_layout.html'%}
+
+{% block title%}
+    KnotMarker | Редактор
+{% endblock %}
+
+{% block head %}
+    <script src="{{url_for('static', filename='js/d3.v3.min.js')}}"> </script>
+    <script src="{{url_for('static', filename='js/randomColor.min.js')}}"> </script>
+    <script src="{{url_for('static', filename='js/editor.js')}}"> </script>
+    <script src="{{url_for('static', filename='js/undomanager.js')}}"> </script>
+    <style>
+    svg {
+        border: 1px solid grey;
+    }
+    </style>
+    <script>
+        var pic_id = '{{ pic_id }}';
+    </script>
+{% endblock %}
+
+{%block  content %}
+    <div class="row">
+        <div class="col-sm-12">
+           <svg id="svgPlace">
+            </svg>
+        </div>
+    </div>
+    <div class="row" id="editorVM">
+        <div class="col-sm-3">
+            <h4>Дефекты:</h4>
+            <select id="Polygons" class="form-control" style="margin-bottom: 5%"
+                    data-bind="attr:{ size: polygons().length }, foreach: polygons, value: currDefect">
+                <option data-bind="text: '[' + $root.polygons().indexOf($data)+'] ' + (defects[type] == undefined? type : defects[type]), style: {color: stroke_color}, value: $data"> </option>
+            </select>
+            <button class="btn btn-normal" data-bind="click: addPoly">Добавить</button>
+            <button class="btn btn-normal" data-bind="click: delPoly, enable: currDefect() != undefined">Удалить</button>
+        </div>
+        <div class="col-sm-3">
+            <h4>Тип дефекта:</h4>
+            <select id="defectType" class="form-control"
+            data-bind="attr:{ size:defects().length }, foreach: defects, value: currType, enable: currDefect() != undefined">
+                 <option data-bind="text: defects[$data], value: $data"> </option>
+            </select>
+            <h4>Или новый тип:</h4>
+            <input class="form-control" data-bind="value: newType, text: newType, enable: currDefect() != undefined"/>
+        </div>
+        <div class="col-sm-3" style="margin-top: 10px" >
+            <button class="btn btn-lg" data-bind="click: savePolygons, enable: canSave">Сохранить</button>
+        </div>
+        <div class="col-sm-3" style="margin-top: 10px" >
+            <div class="row">
+                <button class="btn btn-lg" data-bind="click: undoManager.undo, enable: hasUndo">Отменить</button>
+                <button class="btn btn-lg" data-bind="click: undoManager.redo, enable: hasRedo">Вернуть</button>
+            </div>
+            <div class="row" style="margin-top: 10px">
+                <button class="btn btn-lg" data-bind="click: occludePolygon, enable: currDefect() != undefined">Замкнуть</button>
+            </div>
+            <div class="row" style="margin-top: 10px">
+                 <button class="btn btn-lg btn-danger " data-bind="click: clearChanges" style="margin-top: 50px">Сбросить</button>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'layouts/main_layout.html'%}
+
+{% block title%}
+    KnotMarker | Галерея
+{% endblock %}
+
+{% block head %}
+    <script src="{{url_for('static', filename='js/gallery.js')}}"> </script>
+{% endblock %}
+
+{%block  content %}
+    <div class="row" id="galleryVM">
+        <div class="row">
+            <div class="col-sm-3">
+                <h2 style="margin-top: 0">Галерея</h2>
+                <p>Превьюхи досок</p>
+            </div>
+            <div class="col-sm-1 col-sm-offset-8">
+                <select data-bind="value: imgsPerPage, event: { change: reload }" class="form-control">
+                    <option value="20">20</option>
+                    <option value="40">40</option>
+                    <option value="60">60</option>
+                </select>
+            </div>
+        </div>
+        {% for picturesgroup in pictures %}
+            <div class="row">
+                {% for pic in picturesgroup %}
+                    {% if pic != "" %}
+                        <div class="col-md-3">
+                          <a href="/pic/{{ pic }}" class="thumbnail">
+                            <img src="/pic/thumb/{{ pic }}.jpg" style="width:150px;height:150px">
+                            <p class="text-center">{{ pic }}</p>
+                          </a>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="row">
+        <nav>
+          <ul class="pagination">
+              {% if curr_num == 1 %}
+                <li class="disabled"><a href="/gallery?page={{ curr_num - 1}}&cnt={{pcs_per_page}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+              {% else %}
+                <li><a href="/gallery?page={{ curr_num - 1}}&cnt={{pcs_per_page}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+              {% endif %}
+
+              {% for i in range(1, num_of_pages+1) %}
+                {% if curr_num == i %}
+                 <li class="active"><a href="/gallery?page={{ i }}&cnt={{pcs_per_page}}">{{ i }}<span class="sr-only">(current)</span></a></li>
+                {% else %}
+                 <li><a href="/gallery?page={{ i }}&cnt={{pcs_per_page}}">{{ i }}<span class="sr-only">(current)</span></a></li>
+                {% endif %}
+              {% endfor %}
+
+              {% if curr_num == num_of_pages %}
+                <li class="disabled"><a href="/gallery?page={{ curr_num + 1}}&cnt={{pcs_per_page}}" aria-label="Previous"><span aria-hidden="true">&raquo;</span></a></li>
+              {% else %}
+                <li><a href="/gallery?page={{ curr_num + 1}}&cnt={{pcs_per_page}}" aria-label="Previous"><span aria-hidden="true">&raquo;</span></a></li>
+              {% endif %}
+          </ul>
+        </nav>
+    </div>
+{% endblock %}
