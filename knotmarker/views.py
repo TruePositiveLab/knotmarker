@@ -14,17 +14,14 @@ def index():
 @app.route("/gallery")
 @login_required
 def gallery():
-    group_size = 4
     page_num = int(request.args.get('page'))
     pcs_per_page = int(request.args.get('cnt'))
-    pictures = MarkedUpImage.objects()[pcs_per_page *
-                                       (page_num - 1):pcs_per_page * page_num]
+    pictures = MarkedUpImage.objects().skip(
+        pcs_per_page * (page_num - 1)).limit(pcs_per_page)
     len_of_pictures = MarkedUpImage.objects().count()
-    pictures_groups = [pictures[x:x + group_size]
-                       for x in range(0, len(pictures), group_size)]
     num_of_pages = int(len_of_pictures / pcs_per_page + 1)
     return render_template('gallery.html',
-                           pictures=pictures_groups,
+                           pictures=pictures,
                            num_of_pages=num_of_pages,
                            curr_num=page_num,
                            pcs_per_page=pcs_per_page)
@@ -33,16 +30,20 @@ def gallery():
 @app.route('/pic/<string:pic_id>')
 @login_required
 def edit_image(pic_id):
-    return render_template('editor.html',
-                           pic_id=pic_id)
+    context = {
+        'pic_id': pic_id,
+        'next_pic': MarkedUpImage.next_image(pic_id),
+        'prev_pic': MarkedUpImage.previous_image(pic_id),
+        'next_pic_without_markup': MarkedUpImage.next_image(pic_id, current_user, without_markup=True)
+    }
+    return render_template('editor.html', **context)
 
 
 @app.route('/pic/<string:pic_id>/polygons', methods=['GET', 'POST'])
 @login_required
 def polygons(pic_id):
     if request.method == 'GET':
-        image = MarkedUpImage.objects(
-            filename=pic_id, users_polygons__username=current_user.email).first()
+        image = MarkedUpImage.polygons(pic_id, current_user).first()
         res = []
 
         if image is None:

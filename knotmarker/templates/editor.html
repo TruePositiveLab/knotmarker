@@ -60,6 +60,16 @@
                  <button class="btn btn-lg btn-danger " data-bind="click: clearChanges" style="margin-top: 50px">Сбросить</button>
             </div>
         </div>
-
+    </div>
+    <div class="row">
+        {% if prev_pic %}
+            <a class="btn btn-lg" href="/pic/{{ prev_pic }}">Предыдущая</a>
+        {% endif %}
+        {% if next_pic %}
+            <a class="btn btn-lg" href="/pic/{{ next_pic }}">Следующая</a>
+        {% endif %}
+        {% if next_pic_without_markup %}
+            <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}">Следующая без разметки</a>
+        {% endif %}
     </div>
 {% endblock %}
