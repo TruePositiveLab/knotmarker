@@ -7,7 +7,7 @@ function galleryVM() {
     };
 
     self.imgsPerPage.subscribe(function(newVal) {
-        if (newVal != "") {
+        if (newVal !== "") {
             localStorage.setItem("imgsPerPage", newVal);
         }
     });

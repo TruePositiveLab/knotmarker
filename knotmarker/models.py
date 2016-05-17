@@ -1,6 +1,6 @@
 import datetime
 from mongoengine.queryset import queryset_manager
-from .app import db
+from .application import db
 from flask.ext.security import UserMixin, RoleMixin
 
 

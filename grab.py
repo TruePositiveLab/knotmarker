@@ -21,7 +21,6 @@ thumb_size = 150, 150
 
 def grab(dirpath):
     kmarks = glob.glob(os.path.join(dirpath, '*.kmark'))
-    pictures = glob.glob(os.path.join(dirpath, '*.undistorted.png'))
 
     boards_coords = []
     for kmark in kmarks:

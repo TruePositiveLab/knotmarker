@@ -1,33 +1,8 @@
-from flask import Flask, render_template, make_response, jsonify, request
-from flask.ext.mongoengine import MongoEngine
-from flask_mail import Mail
-from flask.ext.security import Security, MongoEngineUserDatastore, login_required, current_user
+from .application import app
+from .models import MarkedUpImage, Polygon
 
-import os
-
-# web.run_app(app)
-
-app.config['MAIL_SERVER'] = os.environ.get(
-    'KNOTMARKER_MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = os.environ.get(
-    'KNOTMARKER_MAIL_USERNAME', 'knotmarker@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('KNOTMARKER_MAIL_PASSWORD')
-
-mail = Mail(app)
-
-app.config["MONGODB_SETTINGS"] = {'DB': "knotmarker"}
-app.config["SECRET_KEY"] = os.environ.get('KNOTMARKER_SECRET_KEY')
-app.config["SECURITY_REGISTERABLE"] = True
-app.config["SECURITY_CONFIRMABLE"] = True
-
-db = MongoEngine(app)
-
-from .models import User, Role, MarkedUpImage, Polygon
-
-user_datastore = MongoEngineUserDatastore(db, User, Role)
-security = Security(app, user_datastore)
+from flask import render_template, jsonify, request, make_response
+from flask.ext.security import login_required, current_user
 
 
 @app.route("/")
@@ -47,7 +22,7 @@ def gallery():
     len_of_pictures = MarkedUpImage.objects().count()
     pictures_groups = [pictures[x:x + group_size]
                        for x in range(0, len(pictures), group_size)]
-    num_of_pages = len_of_pictures / pcs_per_page + 1
+    num_of_pages = int(len_of_pictures / pcs_per_page + 1)
     return render_template('gallery.html', current_user=current_user, pictures=pictures_groups, num_of_pages=num_of_pages, curr_num=page_num, pcs_per_page=pcs_per_page)
 
 
@@ -118,3 +93,9 @@ def get_image_thumbnail(pic_id):
     response = make_response(image)
     response.headers['Content-Type'] = 'image/png'
     return response
+
+
+@app.errorhandler
+def error_handler(error):
+    print(error)
+    return str(error)
