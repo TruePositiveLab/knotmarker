@@ -8,6 +8,20 @@
     </title>
     <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
     <script type='text/javascript' src="{{url_for('static', filename='js/knockout-min.js')}}"></script>
+	{% if public_dsn %}
+    <script src="https://cdn.ravenjs.com/3.0.4/raven.min.js"></script>
+    <script>
+        Raven.config('{{ public_dsn }}').install();
+        {% if current_user.is_authenticated %}
+        Raven.setUserContext({ 
+            email: '{{ current_user.email }}',
+            id: '{{ current_user.id }}'
+        });
+        {% else %}
+        Raven.setUserContext();
+        {% endif %}
+    </script>
+	{% endif %}
     <script src="{{url_for('static', filename='js/nav.js')}}"> </script>
     {% block head %}
     {% endblock %}

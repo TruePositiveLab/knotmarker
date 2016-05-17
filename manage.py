@@ -1,4 +1,5 @@
 from knotmarker import app
+from knotmarker.commands import Grab
 
 from flask.ext.script import Manager, Server
 
@@ -14,6 +15,8 @@ manager.add_command("runserver", Server(
     use_reloader=DEBUG,
     host='0.0.0.0')
 )
+
+manager.add_command("grab", Grab())
 
 if __name__ == "__main__":
     manager.run()

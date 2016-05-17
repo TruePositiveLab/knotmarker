@@ -1,0 +1,21 @@
+{% extends 'layouts/main_layout.html'%}
+{% block title%} Произошла непревдиденная ошибка {% endblock %}
+{% block head %} {% endblock %}
+{%block content %}
+<div class="row">
+    <h3>Произошла непревдиденная ошибка</h3>
+    {% if public_dsn %}
+        <p>Нам уже известно о ней.</p>
+        <p>ID события: {{ event_id }}</p>
+    {% endif %}k
+</div>
+
+{% if public_dsn %}
+  <script>
+  Raven.showReportDialog({
+    eventId: '{{ g.sentry_event_id }}',
+    dsn: '{{ public_dsn }}'
+  });
+  </script>
+{% endif %}
+{% endblock %}

@@ -334,7 +334,7 @@ function markerVM() {
 
                 if (pic_id !== "") {
                     svg.append("svg:image")
-                        .attr("xlink:href", "/pic/" + pic_id + ".jpg")
+                        .attr("xlink:href", "/pic/" + pic_id + ".png")
                         .attr("x", -boardRect.x)
                         .attr("y", -boardRect.y)
                         .attr("width", width)

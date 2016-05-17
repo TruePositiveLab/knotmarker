@@ -1,7 +1,9 @@
-import datetime
-from mongoengine.queryset import queryset_manager
 from .application import db
+
+from mongoengine.queryset import queryset_manager
 from flask.ext.security import UserMixin, RoleMixin
+import pytz
+from datetime import datetime
 
 
 class Point(db.EmbeddedDocument):
@@ -28,11 +30,16 @@ class UserPolygon(db.EmbeddedDocument):
     polygons = db.ListField(db.EmbeddedDocumentField('Polygon'))
 
 
+def utcnow():
+    dt = datetime.utcnow()
+    return dt.replace(tzinfo=pytz.utc)
+
+
 class MarkedUpImage(db.Document):
-    created_at = db.DateTimeField(default=datetime.datetime.now, required=True)
+    created_at = db.DateTimeField(default=utcnow, required=True)
     filename = db.StringField(primary_key=True, max_length=255, required=True)
     image = db.FileField()
-    image_thumb = db.FileField()
+    image_thumbnail = db.FileField()
     rect = db.EmbeddedDocumentField('Rect')
     users_polygons = db.ListField(db.EmbeddedDocumentField('UserPolygon'))
 
@@ -40,14 +47,12 @@ class MarkedUpImage(db.Document):
         return self.filename
 
     @queryset_manager
-    @classmethod
     def polygons(cls, queryset, pic_id, current_user):
         return queryset.filter(filename=pic_id,
                                users_polygons__username=current_user.email)
 
     @queryset_manager
-    @classmethod
-    def image(cls, queryset, pic_id):
+    def image_by_id(cls, queryset, pic_id):
         return queryset.filter(filename=pic_id)
 
     meta = {

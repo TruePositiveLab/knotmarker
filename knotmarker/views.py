@@ -1,4 +1,4 @@
-from .application import app
+from .application import app, sentry
 from .models import MarkedUpImage, Polygon
 
 from flask import render_template, jsonify, request, make_response
@@ -8,7 +8,7 @@ from flask.ext.security import login_required, current_user
 @app.route("/")
 @login_required
 def index():
-    return render_template('index.html', current_user=current_user)
+    return render_template('index.html')
 
 
 @app.route("/gallery")
@@ -23,13 +23,18 @@ def gallery():
     pictures_groups = [pictures[x:x + group_size]
                        for x in range(0, len(pictures), group_size)]
     num_of_pages = int(len_of_pictures / pcs_per_page + 1)
-    return render_template('gallery.html', current_user=current_user, pictures=pictures_groups, num_of_pages=num_of_pages, curr_num=page_num, pcs_per_page=pcs_per_page)
+    return render_template('gallery.html',
+                           pictures=pictures_groups,
+                           num_of_pages=num_of_pages,
+                           curr_num=page_num,
+                           pcs_per_page=pcs_per_page)
 
 
 @app.route('/pic/<string:pic_id>')
 @login_required
 def edit_image(pic_id):
-    return render_template('editor.html', current_user=current_user, pic_id=pic_id)
+    return render_template('editor.html',
+                           pic_id=pic_id)
 
 
 @app.route('/pic/<string:pic_id>/polygons', methods=['GET', 'POST'])
@@ -61,7 +66,7 @@ def polygons(pic_id):
     polygons = MarkedUpImage.polygons(pic_id, current_user)
 
     if len(polygons) == 0:
-        MarkedUpImage.image(pic_id).upsert_one(
+        MarkedUpImage.image_by_id(pic_id).upsert_one(
             add_to_set__users_polygons={'username': current_user.email})
         polygons = MarkedUpImage.polygons(pic_id, current_user)
 
@@ -79,7 +84,7 @@ def to_polygons(json):
 
 @app.route('/pic/<string:pic_id>.png')
 def get_image(pic_id):
-    markedup_image = MarkedUpImage.image(pic_id).first()
+    markedup_image = MarkedUpImage.image_by_id(pic_id).first()
     image = markedup_image.image.read()
     response = make_response(image)
     response.headers['Content-Type'] = 'image/png'
@@ -88,14 +93,16 @@ def get_image(pic_id):
 
 @app.route('/pic/thumb/<string:pic_id>.png')
 def get_image_thumbnail(pic_id):
-    markedup_image = MarkedUpImage.image(pic_id).first()
-    image = markedup_image.image_thumb.read()
+    markedup_image = MarkedUpImage.image_by_id(pic_id).first()
+    image = markedup_image.image_thumbnail.read()
     response = make_response(image)
     response.headers['Content-Type'] = 'image/png'
     return response
 
 
-@app.errorhandler
+@app.errorhandler(500)
 def error_handler(error):
-    print(error)
-    return str(error)
+    context = {
+        "current_user": current_user,
+    }
+    return render_template('error_handler.html', **context)
