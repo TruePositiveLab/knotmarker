@@ -343,13 +343,13 @@ function markerVM() {
 
 
                 self.defects(Object.keys(defects));
-                for (var i = 0; i < json.Polygons.length; i++) {
-                    if (json.Polygons[i].occluded) {
-                        json.Polygons[i].points.push(json.Polygons[i].points[
+                for (var i = 0; i < json.polygons.length; i++) {
+                    if (json.polygons[i].occluded) {
+                        json.polygons[i].points.push(json.polygons[i].points[
                             0]);
                     }
                 }
-                self.polygons(json.Polygons);
+                self.polygons(json.polygons);
                 self.drawPolygons();
                 self.updatePolygons();
                 self.currDefect(self.polygons()[0]);
