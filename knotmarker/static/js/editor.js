@@ -16,24 +16,18 @@ var mouseScaleY = d3.scale.linear()
     .domain([height, 0])
     .range([0, height]);
 
-var defects = {
-    darken: "Потемнение",
-    knot_defect: "Сучок с дефектами",
-    knot_decay: "Табачный сучок",
-    knot_encased: "Несросшийся сучок",
-    knot_sound: "Здоровый сучок",
-    knot_pin: "Очень маленький сучок",
-    crack: "Трещина",
-    mechanical: "Механическое повреждение",
-    pith: "Сердцевина",
-    tar: "Смоляной карман",
-    unknown: "Неизвестный дефект"
-};
-
 function markerVM() {
     var self = this;
     self.polygons = ko.observableArray();
-    self.defects = ko.observableArray();
+    self.polygonTypes = ko.observableArray();
+    self.polygonTypeToNameMapping = ko.computed(function() {
+        var mapping = {},
+            polygonTypes = self.polygonTypes();
+        for (var i = 0; i < polygonTypes.length; ++i) {
+            mapping[polygonTypes[i].type] = polygonTypes[i].readable_name;
+        }
+        return mapping;
+    }, self);
     self.currDefect = ko.observable();
     self.currType = ko.observable();
     self.newType = ko.observable();
@@ -50,6 +44,8 @@ function markerVM() {
     });
 
     self.currType.subscribe(function(newVal) {
+        if (newVal === undefined)
+            return;
         self.currDefect().type = newVal;
         self.newType("");
         self.polygons(self.polygons());
@@ -321,6 +317,18 @@ function markerVM() {
         self.loadPolygons();
     };
 
+    self.polygonTypeName = function(value) {
+        var name = self.polygonTypeToNameMapping()[value.type];
+        return name === undefined ? value.type : name;
+    };
+
+    self.loadPolygonTypes = function() {
+        d3.json("/polygon_types",
+            function(json) {
+                self.polygonTypes(json.types);
+            });
+    };
+
     self.loadPolygons = function() {
         d3.json("/pic/" + pic_id + "/polygons",
             function(json) {
@@ -341,8 +349,6 @@ function markerVM() {
                         .attr("height", height);
                 }
 
-
-                self.defects(Object.keys(defects));
                 for (var i = 0; i < json.polygons.length; i++) {
                     if (json.polygons[i].occluded) {
                         json.polygons[i].points.push(json.polygons[i].points[
@@ -368,6 +374,7 @@ var bindEditorVM = function() {
     if (state == 'complete') {
         undoManager = new UndoManager();
         undoManager.setCallback(evm.onUndoManagerUpdate);
+        evm.loadPolygonTypes();
         evm.loadPolygons();
         ko.applyBindings(evm, document.getElementById('editorVM'));
     }

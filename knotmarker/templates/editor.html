@@ -31,7 +31,7 @@
             <h4>Дефекты:</h4>
             <select id="Polygons" class="form-control" style="margin-bottom: 5%"
                     data-bind="attr:{ size: polygons().length }, foreach: polygons, value: currDefect">
-                <option data-bind="text: '[' + $root.polygons().indexOf($data)+'] ' + (defects[type] == undefined? type : defects[type]), style: {color: stroke_color}, value: $data"> </option>
+                <option data-bind="text: '[' + $root.polygons().indexOf($data)+'] ' + $root.polygonTypeName($data), style: {color: stroke_color}, value: $data"> </option>
             </select>
             <button class="btn btn-normal" data-bind="click: addPoly">Добавить</button>
             <button class="btn btn-normal" data-bind="click: delPoly, enable: currDefect() != undefined">Удалить</button>
@@ -39,8 +39,8 @@
         <div class="col-sm-3">
             <h4>Тип дефекта:</h4>
             <select id="defectType" class="form-control"
-            data-bind="attr:{ size:defects().length }, foreach: defects, value: currType, enable: currDefect() != undefined">
-                 <option data-bind="text: defects[$data], value: $data"> </option>
+            data-bind="attr:{ size:polygonTypes().length }, foreach: polygonTypes, value: currType, enable: currDefect() != undefined">
+                 <option data-bind="text: $data.readable_name, value: $data.type"> </option>
             </select>
             <h4>Или новый тип:</h4>
             <input class="form-control" data-bind="value: newType, text: newType, enable: currDefect() != undefined"/>

@@ -59,3 +59,4 @@ user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 from .views import *
+from .api import *

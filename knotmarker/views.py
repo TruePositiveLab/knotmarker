@@ -39,50 +39,6 @@ def edit_image(pic_id):
     return render_template('editor.html', **context)
 
 
-@app.route('/pic/<string:pic_id>/polygons', methods=['GET', 'POST'])
-@login_required
-def polygons(pic_id):
-    if request.method == 'GET':
-        image = MarkedUpImage.polygons(pic_id, current_user).first()
-        res = []
-
-        if image is None:
-            return jsonify({
-                'status': 'ok',
-                'polygons': res,
-                'rect': MarkedUpImage.objects(filename=pic_id).first().rect
-            })
-
-        for up in image.users_polygons:
-            if up.username == current_user.email:
-                res = up.polygons
-                break
-
-        return jsonify({
-            'status': 'ok',
-            'polygons': res,
-            'rect': image.rect
-        })
-
-    polygons = MarkedUpImage.polygons(pic_id, current_user)
-
-    if len(polygons) == 0:
-        MarkedUpImage.image_by_id(pic_id).upsert_one(
-            add_to_set__users_polygons={'username': current_user.email})
-        polygons = MarkedUpImage.polygons(pic_id, current_user)
-
-    polygons.upsert_one(
-        set__users_polygons__S__polygons=to_polygons(request.json))
-    return jsonify({'status': 'ok'})
-
-
-def to_polygons(json):
-    polygons = []
-    for poly in json:
-        polygons.append(Polygon(**poly))
-    return polygons
-
-
 @app.route('/pic/<string:pic_id>.png')
 def get_image(pic_id):
     markedup_image = MarkedUpImage.image_by_id(pic_id).first()
@@ -103,7 +59,4 @@ def get_image_thumbnail(pic_id):
 
 @app.errorhandler(500)
 def error_handler(error):
-    context = {
-        "current_user": current_user,
-    }
-    return render_template('error_handler.html', **context)
+    return render_template('error_handler.html')
