@@ -1,6 +1,7 @@
 from flask import Flask, render_template, make_response, jsonify, request
 from flask.ext.mongoengine import MongoEngine
 from flask_mail import Mail
+from flask_babelex import Babel
 from flask.ext.security import Security, MongoEngineUserDatastore, current_user
 
 import dotenv
@@ -8,6 +9,28 @@ import dotenv
 # web.run_app(app)
 
 app = Flask(__name__)
+
+from flask.json import JSONEncoder as BaseEncoder
+from speaklater import is_lazy_string
+
+
+class JSONEncoder(BaseEncoder):
+
+    def default(self, o):
+        if is_lazy_string(o):
+            return str(o)
+
+        return BaseEncoder.default(self, o)
+
+app.json_encoder = JSONEncoder
+
+app.config['BABEL_DEFAULT_LOCALE'] = 'ru'
+babel = Babel(app)
+
+
+@babel.localeselector
+def get_locale():
+    return 'ru'
 
 app.config['MAIL_SERVER'] = dotenv.get(
     'KNOTMARKER_MAIL_SERVER', 'smtp.gmail.com')
@@ -58,5 +81,6 @@ from .models import User, Role, MarkedUpImage, Polygon
 user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
+from .forms import *
 from .views import *
 from .api import *
