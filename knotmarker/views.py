@@ -1,7 +1,7 @@
-from .application import app, sentry
-from .models import MarkedUpImage, Polygon
+from .application import app
+from .models import MarkedUpImage
 
-from flask import render_template, jsonify, request, make_response
+from flask import render_template, request, make_response
 from flask.ext.security import login_required, current_user
 
 
@@ -30,11 +30,14 @@ def gallery():
 @app.route('/pic/<string:pic_id>')
 @login_required
 def edit_image(pic_id):
+    next_pic_wo_markup = MarkedUpImage.next_image(pic_id,
+                                                  current_user,
+                                                  without_markup=True)
     context = {
         'pic_id': pic_id,
         'next_pic': MarkedUpImage.next_image(pic_id),
         'prev_pic': MarkedUpImage.previous_image(pic_id),
-        'next_pic_without_markup': MarkedUpImage.next_image(pic_id, current_user, without_markup=True)
+        'next_pic_without_markup': next_pic_wo_markup
     }
     return render_template('editor.html', **context)
 

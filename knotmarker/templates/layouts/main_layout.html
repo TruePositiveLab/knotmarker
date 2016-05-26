@@ -13,7 +13,7 @@
     <script>
         Raven.config('{{ public_dsn }}').install();
         {% if current_user.is_authenticated %}
-        Raven.setUserContext({ 
+        Raven.setUserContext({
             email: '{{ current_user.email }}',
             id: '{{ current_user.id }}'
         });

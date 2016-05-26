@@ -1,17 +1,18 @@
-from flask import Flask, render_template, make_response, jsonify, request
+from flask import Flask
 from flask.ext.mongoengine import MongoEngine
-from flask_mail import Mail
-from flask_babelex import Babel
 from flask.ext.security import Security, MongoEngineUserDatastore, current_user
+from flask.json import JSONEncoder as BaseEncoder
+from flask_babelex import Babel
+from flask_mail import Mail
+from speaklater import is_lazy_string
 
 import dotenv
 
+
 # web.run_app(app)
 
-app = Flask(__name__)
 
-from flask.json import JSONEncoder as BaseEncoder
-from speaklater import is_lazy_string
+app = Flask(__name__)
 
 
 class JSONEncoder(BaseEncoder):
@@ -76,11 +77,12 @@ def inject_user():
 
 db = MongoEngine(app)
 
-from .models import User, Role, MarkedUpImage, Polygon
+#
+from .models import User, Role  # noqa
 
 user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-from .forms import *
-from .views import *
-from .api import *
+from .forms import *  # noqa
+from .views import *  # noqa
+from .api import *  # noqa

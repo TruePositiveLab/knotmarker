@@ -3,7 +3,7 @@ from .application import app
 from .models import MarkedUpImage, Polygon
 
 from flask import request
-from flask_restful import reqparse, abort, Api, Resource, fields, marshal_with
+from flask_restful import Api, Resource, fields, marshal_with
 from flask.ext.security import login_required, current_user
 
 api = Api(app)

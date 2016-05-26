@@ -21,7 +21,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             limit = 0,
             isExecuting = false,
             callback,
-            
+
             // functions
             execute;
 
@@ -50,12 +50,12 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
                 // invalidate items higher on the stack
                 commands.splice(index + 1, commands.length - index);
                 commands.push(command);
-                
+
                 // if limit is set, remove items from the start
                 if (limit && commands.length > limit) {
                     removeFromTo(commands, 0, -(limit+1));
                 }
-                
+
                 // set the current index to the end
                 index = commands.length - 1;
                 if (callback) {
@@ -133,7 +133,7 @@ https://github.com/ArthurClemens/Javascript-Undo-Manager
             getIndex: function() {
                 return index;
             },
-            
+
             setLimit: function (l) {
                 limit = l;
             }

@@ -57,7 +57,8 @@ class MarkedUpImage(db.Document):
         return queryset.filter(filename=pic_id)
 
     @queryset_manager
-    def next_image(cls, queryset, pic_id, current_user=None, without_markup=False):
+    def next_image(cls, queryset, pic_id,
+                   current_user=None, without_markup=False):
         qs = queryset.filter(filename__gt=pic_id)
         if without_markup:
             qs = qs.filter(
@@ -66,7 +67,8 @@ class MarkedUpImage(db.Document):
 
     @queryset_manager
     def previous_image(cls, queryset, pic_id):
-        return queryset.filter(filename__lt=pic_id).order_by('-filename').first()
+        return queryset.filter(filename__lt=pic_id)\
+            .order_by('-filename').first()
 
     meta = {
         'allow_inheritance': True,
