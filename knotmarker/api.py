@@ -1,10 +1,14 @@
-from .application import app
-
-from .models import MarkedUpImage, Polygon
-
 from flask import request
-from flask_restful import Api, Resource, fields, marshal_with
-from flask.ext.security import login_required, current_user
+from flask.ext.security import current_user
+from flask.ext.security import login_required
+from flask_restful import Api
+from flask_restful import fields
+from flask_restful import marshal_with
+from flask_restful import Resource
+
+from .application import app
+from .models import MarkedUpImage
+from .models import Polygon
 
 api = Api(app)
 

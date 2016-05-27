@@ -1,12 +1,15 @@
+# pylint: disable=wildcard-import,unused-wildcard-import,wrong-import-position
+import logging
+
+import dotenv
 from flask import Flask
 from flask.ext.mongoengine import MongoEngine
-from flask.ext.security import Security, MongoEngineUserDatastore, current_user
+from flask.ext.security import current_user,\
+    MongoEngineUserDatastore, Security  # noreorder
 from flask.json import JSONEncoder as BaseEncoder
 from flask_babelex import Babel
 from flask_mail import Mail
 from speaklater import is_lazy_string
-
-import dotenv
 
 
 # web.run_app(app)
@@ -17,7 +20,7 @@ app = Flask(__name__)
 
 class JSONEncoder(BaseEncoder):
 
-    def default(self, o):
+    def default(self, o):  # pylint: disable=method-hidden
         if is_lazy_string(o):
             return str(o)
 
@@ -51,7 +54,6 @@ app.config["SECURITY_CONFIRMABLE"] = True
 SENTRY_DSN = dotenv.get('KNOTMARKER_SENTRY_DSN', None)
 
 if SENTRY_DSN:
-    import logging
     from raven.contrib.flask import Sentry
     app.config['SENTRY_USER_ATTRS'] = ['email']
     sentry = Sentry(app, logging=True, level=logging.ERROR, dsn=SENTRY_DSN)

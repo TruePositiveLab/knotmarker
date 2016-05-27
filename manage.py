@@ -1,9 +1,9 @@
+import dotenv
+from flask.ext.script import Manager
+from flask.ext.script import Server
+
 from knotmarker import app
 from knotmarker.commands import Grab
-
-from flask.ext.script import Manager, Server
-
-import dotenv
 dotenv.load()
 
 manager = Manager(app)

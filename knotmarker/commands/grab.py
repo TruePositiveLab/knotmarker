@@ -1,12 +1,14 @@
-from flask.ext.script import Command, Option
-
-import os
 import glob
 import io
-from PIL import Image
-from knotmarker.models import MarkedUpImage, Rect
-
 import logging
+import os
+
+from flask.ext.script import Command
+from flask.ext.script import Option
+from PIL import Image
+
+from knotmarker.models import MarkedUpImage
+from knotmarker.models import Rect
 
 logger = logging.getLogger(__name__)
 

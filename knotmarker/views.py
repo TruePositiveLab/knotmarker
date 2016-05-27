@@ -1,8 +1,11 @@
+from flask import make_response
+from flask import render_template
+from flask import request
+from flask.ext.security import current_user
+from flask.ext.security import login_required
+
 from .application import app
 from .models import MarkedUpImage
-
-from flask import render_template, request, make_response
-from flask.ext.security import login_required, current_user
 
 
 @app.route("/")

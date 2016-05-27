@@ -1,10 +1,12 @@
-from .application import db
+from datetime import datetime
 
+import pytz
+from flask.ext.security import RoleMixin
+from flask.ext.security import UserMixin
 from mongoengine import Q
 from mongoengine.queryset import queryset_manager
-from flask.ext.security import UserMixin, RoleMixin
-import pytz
-from datetime import datetime
+
+from .application import db
 
 
 class Point(db.EmbeddedDocument):
