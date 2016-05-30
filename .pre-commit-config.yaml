@@ -3,6 +3,7 @@
     hooks:
     -   id: trailing-whitespace
     -   id: check-ast
+        language_version: python3
     -   id: check-added-large-files
     -   id: autopep8-wrapper
     -   id: check-case-conflict
@@ -17,6 +18,7 @@
     sha: v0.2.0
     hooks:
     -   id: reorder-python-imports
+        language_version: python3
 -   repo: git://github.com/pre-commit/mirrors-pylint
     sha: 4de6c8dfadef1a271a814561ce05b8bc1c446d22
     hooks:
@@ -25,3 +27,7 @@
         language_version: python3
         additional_dependencies:
         - pylint-flask
+-   repo: git://github.com/d1ff/pre-commit-mypy
+    sha: v0.4.1
+    hooks:
+    -   id: mypy

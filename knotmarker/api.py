@@ -5,6 +5,9 @@ from flask_restful import Api
 from flask_restful import fields
 from flask_restful import marshal_with
 from flask_restful import Resource
+from typings import Any
+from typings import Dict
+from typings import Iterable
 
 from .application import app
 from .models import MarkedUpImage
@@ -16,7 +19,7 @@ api = Api(app)
 class PolygonTypes(Resource):
 
     @login_required
-    def get(self):
+    def get(self) -> Any:
         return {
             'types': [
                 {'type': 'darken',
@@ -70,7 +73,7 @@ polygons_by_image_fields = {
 }
 
 
-def stroke_color(value):
+def stroke_color(value: Any) -> str:
     return str(value)
 
 
@@ -78,9 +81,9 @@ class PolygonsByImage(Resource):
 
     @login_required
     @marshal_with(polygons_by_image_fields)
-    def get(self, pic_id):
+    def get(self, pic_id: str) -> Dict[str, Any]:
         image = MarkedUpImage.polygons(pic_id, current_user).first()
-        res = []
+        res = []  # type: Iterable[Any]
 
         if image is None:
             return {
@@ -100,14 +103,14 @@ class PolygonsByImage(Resource):
             'rect': image.rect
         }
 
-    def to_polygons(self, json):
+    def to_polygons(self, json: Iterable[Any]) -> Iterable[Polygon]:
         polygons = []
         for poly in json:
             polygons.append(Polygon(**poly))
         return polygons
 
     @login_required
-    def post(self, pic_id):
+    def post(self, pic_id: str) -> Dict[str, Any]:
         # TODO: request validation
         polygons = MarkedUpImage.polygons(pic_id, current_user)
 
