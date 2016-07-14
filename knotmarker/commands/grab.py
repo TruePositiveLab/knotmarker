@@ -43,7 +43,7 @@ class Grab(Command):
             with open(kmark, 'r') as f:
                 coords = f.readline().strip('\n').split()[1:]
 
-            filename = kmark.split('/')[-1:][0][0:14]
+            filename = kmark.split('/')[-1:][0].replace(".kmark", "")
 
             picpath = os.path.join(dir_path, filename + '.undistorted.png')
             pic = None
@@ -65,9 +65,7 @@ class Grab(Command):
 
             coordobj = PictureWithBoardCoordinates(
                 filename, *coords, pic=pic, pic_thumb=pic_thumb_b_arr)
-            boards_coords.append(coordobj)
 
-        for coordobj in boards_coords:
             image = MarkedUpImage(filename=coordobj.filename)
             image.image.put(coordobj.pic, content_type='image/png')
             image.image_thumbnail.put(
