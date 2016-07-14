@@ -28,6 +28,27 @@ class Polygon(db.EmbeddedDocument):
     occluded = db.BooleanField(required=True, default=False)
 
 
+class PolygonType(db.Document):
+    readable_name = db.StringField(required=True, unique=True)
+    name = db.StringField(required=True, unique=True)
+    creator = db.StringField(required=True)
+    popularity = db.LongField(default=0)
+
+    meta = {
+        'indexes': ['-popularity'],
+    }
+
+    @queryset_manager
+    def active_types(self, queryset):
+        """Returns all system-defined types with most popular user-defined
+
+        :queryset: queryset to filter
+        :returns: 'active' types
+
+        """
+        return queryset.filter(Q(creator='system') | Q(popularity__gt=5))
+
+
 class UserPolygon(db.EmbeddedDocument):
     username = db.StringField(required=True)
     polygons = db.ListField(db.EmbeddedDocumentField('Polygon'))

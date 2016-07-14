@@ -1,0 +1,27 @@
+mongodb:
+    image: mongo
+    restart: always
+    volumes:
+        - /var/knotmarker/mongodb:/data/db
+    command: mongod --storageEngine wiredTiger
+webapp:
+    image: truepositivelab/knotmarker
+    environment:
+        KNOTMARKER_MONGODB_HOST: mongodb
+        KNOTMARKER_SENTRY_DSN:
+        KNOTMARKER_SECRET_KEY:
+        KNOTMARKER_MAIL_PASSWORD:
+    links:
+        - mongodb
+    volumes:
+        - /var/knotmarker:/app-data
+    restart: always
+nginx:
+    image: nginx
+    links:
+      - webapp
+    ports:
+      - "8000:80"
+    volumes:
+      - /var/knotmarker/nginx:/etc/nginx/conf.d:ro
+    restart: always
