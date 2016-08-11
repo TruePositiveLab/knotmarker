@@ -5,10 +5,6 @@
 {% endblock %}
 
 {% block head %}
-    <script src="{{url_for('static', filename='js/d3.v3.min.js')}}"> </script>
-    <script src="{{url_for('static', filename='js/randomColor.min.js')}}"> </script>
-    <script src="{{url_for('static', filename='js/editor.js')}}"> </script>
-    <script src="{{url_for('static', filename='js/undomanager.js')}}"> </script>
     <style>
     svg {
         border: 1px solid grey;
@@ -16,6 +12,12 @@
     </style>
     <script>
         var pic_id = '{{ pic_id }}';
+        var UndoManager, RandomColor;
+        require(["randomColor", "editor", "undomanager"],
+                function(randomColor, editor, undoManager) {
+                    UndoManager = undoManager;
+                    RandomColor = randomColor;
+                });
     </script>
 {% endblock %}
 

@@ -5,7 +5,9 @@
 {% endblock %}
 
 {% block head %}
-    <script src="{{url_for('static', filename='js/gallery.js')}}"> </script>
+    <script>
+        require(["gallery"]);
+    </script>
 {% endblock %}
 
 {%block  content %}
@@ -16,9 +18,9 @@
             </div>
             <div class="col-sm-1 col-sm-offset-8">
                 <select data-bind="value: imgsPerPage, event: { change: reload }" class="form-control">
-                    <option value="20">20</option>
-                    <option value="40">40</option>
-                    <option value="60">60</option>
+                    <option value=20>20</option>
+                    <option value=40>40</option>
+                    <option value=60>60</option>
                 </select>
             </div>
         </div>

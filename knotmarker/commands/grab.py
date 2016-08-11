@@ -43,7 +43,7 @@ class Grab(Command):
             with open(kmark, 'r') as f:
                 coords = f.readline().strip('\n').split()[1:]
 
-            filename = kmark.split('/')[-1:][0].replace(".kmark", "")
+            filename = kmark.split('/')[-1:][0].replace(".auto.kmark", "")
 
             picpath = os.path.join(dir_path, filename + '.undistorted.png')
             pic = None

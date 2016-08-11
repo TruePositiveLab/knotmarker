@@ -1,0 +1,14 @@
+{
+  "name": "knotmarker_package",
+  "version": "1.0.0",
+  "scripts":{
+    "install_typings": "cd ../../ && typings install --global --save dt~knockout dt~d3"
+  },
+  "dependencies": {
+    "knockout": "~3.4.0",
+    "d3": "~3.5.16",
+    "requirejs": "~2.2.0",
+    "undo-manager": "~1.0.5",
+    "randomcolor": "~0.4.4"
+  }
+}

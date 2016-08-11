@@ -6,8 +6,12 @@
         {% block title %}
         {% endblock %}
     </title>
+    <script src="{{url_for('static', filename='js/external/node_modules/requirejs/require.js')}}"></script>
+    <script src="{{url_for('static', filename='js/require-config.js')}}"></script>
+    <script>
+        require(["nav"]);
+    </script>
     <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
-    <script type='text/javascript' src="{{url_for('static', filename='js/knockout-min.js')}}"></script>
 	{% if public_dsn %}
     <script src="https://cdn.ravenjs.com/3.0.4/raven.min.js"></script>
     <script>
@@ -22,7 +26,6 @@
         {% endif %}
     </script>
 	{% endif %}
-    <script src="{{url_for('static', filename='js/nav.js')}}"> </script>
     {% block head %}
     {% endblock %}
 </head>

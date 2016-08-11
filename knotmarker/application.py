@@ -49,7 +49,7 @@ mail = Mail(app)
 app.config['MONGODB_DB'] = dotenv.get('KNOTMARKER_MONGODB_DB', 'knotmarker')
 app.config['MONGODB_HOST'] = dotenv.get('KNOTMARKER_MONGODB_HOST', 'localhost')
 app.config['MONGODB_PORT'] = dotenv.get('KNOTMARKER_MONGODB_PORT', 27017)
-app.config["SECRET_KEY"] = dotenv.get('KNOTMARKER_SECRET_KEY')
+app.config["SECRET_KEY"] = bytes(dotenv.get('KNOTMARKER_SECRET_KEY'))
 app.config["SECURITY_REGISTERABLE"] = True
 app.config["SECURITY_CONFIRMABLE"] = True
 

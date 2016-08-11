@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outDir": "./static/js",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "amd",
+        "target": "es5"
+    },
+    "files": [
+        "./static/typings/index.d.ts",
+        "./static/ts/require-config.ts",
+        "./static/ts/nav.ts",
+        "./static/ts/gallery.ts",
+        "./static/ts/editor.ts"
+    ]
+}
