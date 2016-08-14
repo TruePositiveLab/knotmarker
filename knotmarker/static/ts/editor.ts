@@ -1,12 +1,13 @@
 import * as ko from "knockout";
 import * as d3 from "d3";
+import { ViewModel } from "viewmodel";
 declare var UndoManager: any;
 declare var RandomColor: any;
 declare var pic_id: string;
 
 namespace ViewModels {
 
-    class EditorViewModel {
+    class EditorViewModel extends ViewModel{
         polygonTypes: KnockoutObservableArray<any> = ko.observableArray();
         polygons: KnockoutObservableArray<any> = ko.observableArray();
         currDefect: KnockoutObservable<any> = ko.observable();
@@ -42,6 +43,7 @@ namespace ViewModels {
         fontSize: number = this.mouseScaleX(20);
 
         constructor() {
+            super();
             this.picId = pic_id;
             this.newType.subscribe(newVal => {
                 if (newVal !== "") {
@@ -343,14 +345,7 @@ namespace ViewModels {
             let name = this.polygonTypeToNameMapping()[value.type];
             return name === undefined ? value.type : name;
         };
-
-        static bind() {
-            if (document.readyState == 'complete') {
-                let vm = new EditorViewModel();
-                ko.applyBindings(vm, document.getElementById(vm.htmlElemName));
-            }
-        }
     }
 
-    document.addEventListener('readystatechange', EditorViewModel.bind, false);
+    document.addEventListener('readystatechange', () => ViewModel.bind(EditorViewModel), false);
 }

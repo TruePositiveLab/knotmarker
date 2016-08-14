@@ -1,8 +1,9 @@
 import * as ko from "knockout";
+import { ViewModel } from "viewmodel";
 
 namespace ViewModels {
 
-    class NavigationViewModel {
+    class NavigationViewModel extends ViewModel {
         galleryUrl: KnockoutObservable<string>;
         galleryUrlTempl: string = '/gallery?page=1&cnt=';
         imgsPerPageKey: string = 'imgsPerPage';
@@ -10,6 +11,7 @@ namespace ViewModels {
         htmlElemName: string = 'navVM';
 
         constructor() {
+            super();
             let imgsPerPage = this.getImgsPerPageCnt();
             this.galleryUrl = ko.observable(this.galleryUrlTempl + imgsPerPage);
         }
@@ -17,14 +19,7 @@ namespace ViewModels {
         getImgsPerPageCnt() {
             return localStorage.getItem(this.imgsPerPageKey) || this.defaultImgsCnt;
         }
-
-        static bind() {
-            if (document.readyState == 'complete') {
-                let vm = new NavigationViewModel();
-                ko.applyBindings(vm, document.getElementById(vm.htmlElemName));
-            }
-        }
     }
 
-    document.addEventListener('readystatechange', NavigationViewModel.bind, false);
+    document.addEventListener('readystatechange', () => ViewModel.bind(NavigationViewModel), false);
 }

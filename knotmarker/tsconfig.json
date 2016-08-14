@@ -11,6 +11,7 @@
         "./static/ts/require-config.ts",
         "./static/ts/nav.ts",
         "./static/ts/gallery.ts",
-        "./static/ts/editor.ts"
+        "./static/ts/editor.ts",
+        "./static/ts/viewmodel.ts"
     ]
 }
