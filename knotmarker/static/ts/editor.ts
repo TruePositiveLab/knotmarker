@@ -324,5 +324,3 @@ export class EditorViewModel extends ViewModel {
         return name === undefined ? value.type : name;
     };
 }
-
-ViewModel.tryBind(EditorViewModel);

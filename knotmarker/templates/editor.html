@@ -13,10 +13,12 @@
     <script>
         var pic_id = '{{ pic_id }}';
         var UndoManager, RandomColor;
-        require(["randomColor", "editor", "undomanager"],
-                function(randomColor, editor, undoManager) {
+        require(["randomColor", "undomanager", "editor"],
+                function(randomColor, undoManager, editor) {
                     UndoManager = undoManager;
                     RandomColor = randomColor;
+                    var EditorViewModel = editor.EditorViewModel;
+                    EditorViewModel.tryBind(EditorViewModel);
                 });
     </script>
 {% endblock %}
