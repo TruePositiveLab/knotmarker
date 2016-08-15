@@ -39,6 +39,7 @@ export class EditorViewModel extends ViewModel {
         .range([0, this.height]);
 
     fontSize: number = this.mouseScaleX(20);
+    mainCircleRadius: number = this.mouseScaleX(10);
 
     constructor() {
         super();
@@ -108,7 +109,6 @@ export class EditorViewModel extends ViewModel {
     };
 
     onUndoManagerUpdate() {
-        this.drawPolygons();
         this.updatePolygons();
         this.canSave(this.currDefect().points.length > 0);
         this.hasUndo(this.undoManager.hasUndo());
@@ -146,82 +146,62 @@ export class EditorViewModel extends ViewModel {
             }
         }
         this.polygons(json.polygons);
-        this.drawPolygons();
+        this.updatePolygons(true);
         this.updatePolygons();
         this.currDefect(this.polygons()[0]);
         this.canSave(this.currDefect() !== undefined && this.currDefect().points.length > 0);
     };
 
-    updatePolygons() {
-        this.svg.selectAll("polyline")
-            .data(this.getPolygons())
-            .attr("points", (d: any) => this.getMappedPoints(d))
+    updatePolygons(draw: boolean = false) {
+        let polylines = this.svg.selectAll("polyline")
+            .data(this.getPolygons());
+
+        let circles = this.svg.selectAll("circle")
+            .data(this.getPolygons());
+
+        let text = this.svg.selectAll("text")
+            .data(this.getPolygons());
+
+        if(draw){
+            polylines = polylines.enter().append("polyline");
+            circles = circles.enter().append("circle");
+            text = text.enter().append("text");
+        }
+
+        polylines.call((l: any) => this.onPolyline(l));
+        circles.call((c: any) => this.onCircle(c));
+        text.call((t: any) => this.onText(t));
+
+        if(!draw){
+            polylines.call((x: any) => this.onClear(x));
+            circles.call((x: any) => this.onClear(x));
+            text.call((x: any) => this.onClear(x));
+        }
+    }
+
+    onClear(fig: any)
+    {
+        fig.exit().remove();
+    }
+
+    onPolyline(line: any) {
+          line.attr("points", (d: any) => this.getMappedPoints(d))
             .attr("stroke", (d: any) => d.stroke_color)
             .attr("fill", "none")
             .attr("stroke-width", 2);
+    }
 
-        this.svg.selectAll("circle")
-            .data(this.getPolygons())
-            .attr("cx", (d: any) => this.getCircleX(d))
+    onCircle(circle: any) {
+        circle.attr("cx", (d: any) => this.getCircleX(d))
             .attr("cy", (d: any) => this.getCircleY(d))
-            .attr("r", this.mouseScaleX(10))
+            .attr("r", this.mainCircleRadius)
             .attr("stroke", (d: any) =>d.stroke_color)
             .attr("stroke-width", 2)
             .attr("fill", "transparent");
-
-        this.svg.selectAll("text")
-            .data(this.getPolygons())
-            .attr("x", (d: any) => this.getCircleX(d))
-            .attr("y", (d: any) => this.getCircleY(d, this.fontSize / 2.5))
-            .text((d: any) => this.polygons().indexOf(d))
-            .attr("font-family", "sans-serif")
-            .attr("font-size", this.fontSize)
-            .style("text-anchor", "middle")
-            .style("font-weight", "bold")
-            .attr("fill", "black");
-
-        this.svg.selectAll("polyline")
-            .data(this.polygons())
-            .exit()
-            .remove();
-
-        this.svg.selectAll("circle")
-            .data(this.polygons())
-            .exit()
-            .remove();
-
-        this.svg.selectAll("text")
-            .data(this.polygons())
-            .exit()
-            .remove();
     }
 
-    drawPolygons() {
-        this.svg.selectAll("polyline")
-            .data(this.getPolygons())
-            .enter()
-            .append("polyline")
-            .attr("points", (d: any) => this.getMappedPoints(d))
-            .attr("stroke", (d: any) => d.stroke_color)
-            .attr("fill", "none")
-            .attr("stroke-width", 2);
-
-        this.svg.selectAll("circle")
-            .data(this.getPolygons())
-            .enter()
-            .append("circle")
-            .attr("cx", (d: any) => this.getCircleX(d))
-            .attr("cy", (d: any) => this.getCircleY(d))
-            .attr("r", this.mouseScaleX(10))
-            .attr("stroke", (d: any) => d.stroke_color)
-            .attr("stroke-width", 2)
-            .attr("fill", "transparent");
-
-        this.svg.selectAll("text")
-            .data(this.getPolygons())
-            .enter()
-            .append("text")
-            .attr("x", (d: any) => this.getCircleX(d))
+    onText(text: any) {
+        text.attr("x", (d: any) => this.getCircleX(d))
             .attr("y", (d: any) => this.getCircleY(d, this.fontSize / 2.5))
             .text((d: any) => this.polygons().indexOf(d))
             .attr("font-family", "sans-serif")
@@ -323,7 +303,7 @@ export class EditorViewModel extends ViewModel {
             "y": this.mouseScaleY(mouse_point[1])
         };
         this.addPoint(point);
-        this.drawPolygons();
+        this.updatePolygons(true);
         this.updatePolygons();
     };
 
