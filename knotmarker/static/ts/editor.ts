@@ -40,6 +40,7 @@ export class EditorViewModel extends ViewModel {
 
     fontSize: number = this.mouseScaleX(20);
     mainCircleRadius: number = this.mouseScaleX(10);
+    circleRadius: number = this.mouseScaleX(5);
 
     constructor() {
         super();
@@ -62,6 +63,8 @@ export class EditorViewModel extends ViewModel {
         this.currDefect.subscribe(newVal => {
             if (newVal !== undefined) {
                 this.currType(newVal.type);
+                //this.updateCircles()
+                this.highlightPolygon(newVal);
             }
         });
 
@@ -81,7 +84,7 @@ export class EditorViewModel extends ViewModel {
         }, this);
     }
 
-    addPoly(data: any, event: any) {
+    addPoly() {
         this.polygons.push({
             "type": "unknown",
             "stroke_color": this.getNewColor(),
@@ -129,7 +132,8 @@ export class EditorViewModel extends ViewModel {
             .select("#svgPlace")
             .attr("width", boardRect.w - boardRect.x)
             .attr("height", boardRect.h - boardRect.y)
-            .on("click", () => this.createPoint());
+            .on("click", () => this.createPoint())
+            .on("dblclick", () => this.createPolygon());
 
         if (this.picId !== "") {
             this.svg.append("svg:image")
@@ -146,37 +150,26 @@ export class EditorViewModel extends ViewModel {
             }
         }
         this.polygons(json.polygons);
-        this.updatePolygons(true);
         this.updatePolygons();
         this.currDefect(this.polygons()[0]);
         this.canSave(this.currDefect() !== undefined && this.currDefect().points.length > 0);
     };
 
-    updatePolygons(draw: boolean = false) {
+    createPolygon(){
+        this.addPoly();
+        this.createPoint(true);
+    }
+
+    updatePolygons() {
+        let polygons  = this.getPolygons();
         let polylines = this.svg.selectAll("polyline")
-            .data(this.getPolygons());
+            .data(polygons);
 
-        let circles = this.svg.selectAll("circle")
-            .data(this.getPolygons());
-
-        let text = this.svg.selectAll("text")
-            .data(this.getPolygons());
-
-        if(draw){
-            polylines = polylines.enter().append("polyline");
-            circles = circles.enter().append("circle");
-            text = text.enter().append("text");
-        }
-
+        polylines.enter()
+            .append("polyline")
+            .call((l: any) => this.onPolyline(l));
         polylines.call((l: any) => this.onPolyline(l));
-        circles.call((c: any) => this.onCircle(c));
-        text.call((t: any) => this.onText(t));
-
-        if(!draw){
-            polylines.call((x: any) => this.onClear(x));
-            circles.call((x: any) => this.onClear(x));
-            text.call((x: any) => this.onClear(x));
-        }
+        polylines.call((x: any) => this.onClear(x));
     }
 
     onClear(fig: any)
@@ -184,20 +177,80 @@ export class EditorViewModel extends ViewModel {
         fig.exit().remove();
     }
 
+    updateCircles(polygon: any) {
+        //we select group which contains points(circles) of current polygon
+        let ind: number = this.polygons.indexOf(polygon);
+        let groupId: string = "#poly"+ind;
+        let group = this.svg.select(groupId);
+
+        if(group.empty())
+        {
+            this.svg.append("g").attr("id", groupId.substring(1));
+            group =  this.svg.select(groupId);
+        }
+
+        let circles = group
+                    .selectAll("circle")
+                    .data(polygon.points);
+
+        if(polygon == this.currDefect()){
+            circles.enter()
+                .append("circle")
+                .call((l: any) => this.onCircle(l, polygon.stroke_color));
+            circles.call((l: any) => this.onCircle(l, polygon.stroke_color));
+        }
+        circles.call((x: any) => this.onClear(x));
+    }
+
+    highlightPolygon(polygon: any) {
+        //we remove groups that contains points(circles) of other polygons
+        let ind: number = this.polygons.indexOf(polygon);
+        let groupId: string = "poly"+ind;
+        console.log(groupId);
+
+        this.svg
+            .selectAll("g[id^='poly']")
+            .filter(":not([id='" + groupId + "'])")
+            .remove();
+
+        //highlights current polygon with circles on it vertexes
+        this.updatePolygons();
+    }
+
     onPolyline(line: any) {
           line.attr("points", (d: any) => this.getMappedPoints(d))
             .attr("stroke", (d: any) => d.stroke_color)
             .attr("fill", "none")
-            .attr("stroke-width", 2);
+            .attr("stroke-width", 3)
+            .on("click", (l: any) => this.onPolygonClick(l))
+            .each((p: any) => this.updateCircles(p))
     }
 
-    onCircle(circle: any) {
+    onPolygonClick(l: any) {
+        this.currDefect(l);
+        d3.event.stopPropagation();
+    }
+
+    onCircle(circle: any, stroke_color: any) {
         circle.attr("cx", (d: any) => this.getCircleX(d))
             .attr("cy", (d: any) => this.getCircleY(d))
-            .attr("r", this.mainCircleRadius)
-            .attr("stroke", (d: any) =>d.stroke_color)
+            .attr("r", this.circleRadius)
+            .attr("stroke", stroke_color)
             .attr("stroke-width", 2)
-            .attr("fill", "transparent");
+            .attr("fill", stroke_color)
+            .on("click", (c: any) => this.onCircleClick(c));
+    }
+
+    onCircleClick(circle: any){
+        if (d3.event.shiftKey) {
+            console.log(circle);
+            let ind = this.currDefect().points.indexOf(circle);
+            console.log(ind);
+            this.currDefect().points.splice(ind, 1);
+            console.log('this.currDefect().points');
+            console.log(this.currDefect().points);
+            this.updatePolygons();
+        }
     }
 
     onText(text: any) {
@@ -219,12 +272,12 @@ export class EditorViewModel extends ViewModel {
         return polygon.points.map((d: any) => [this.scaleX(d.x), this.scaleY(d.y)].join(",")).join(" ")
     }
 
-    getCircleX(polygon: any, offset:number = 0) {
-        return this.scaleX(polygon.points[0].x) + offset;
+    getCircleX(point: any, offset:number = 0) {
+        return this.scaleX(point.x) + offset;
     }
 
-    getCircleY(polygon: any, offset:number = 0) {
-        return this.scaleY(polygon.points[0].y) + offset;
+    getCircleY(point: any, offset:number = 0) {
+        return this.scaleY(point.y) + offset;
     }
 
     occludePolygon() {
@@ -253,29 +306,30 @@ export class EditorViewModel extends ViewModel {
         }
     };
 
-    createPoint() {
-        if (this.currDefect() === undefined)
-            return;
+    createPoint(ignoreEvent: boolean = false) {
+        if (d3.event.ctrlKey || ignoreEvent) {
+            if (this.currDefect() === undefined)
+                return;
 
-        let points = this.currDefect().points;
-        if (points.length == 1) {
-            this.lineStarted = false;
-            let point = this.getCurrMousePoint();
-            points.push(point);
-        } else {
-            this.lineStarted = !this.lineStarted;
+            let points = this.currDefect().points;
+            if (points.length == 1) {
+                this.lineStarted = false;
+                let point = this.getCurrMousePoint();
+                points.push(point);
+            } else {
+                this.lineStarted = !this.lineStarted;
+            }
+
+            if (this.lineStarted) {
+                this.svg.on("mousemove", () => this.mousemove());
+                let point = this.getCurrMousePoint();
+                points.push(point);
+            } else {
+                this.svg.on("mousemove", null);
+                let point = this.getCurrMousePoint();
+                this.undoManager.add(this.createUndoDict(point));
+            }
         }
-
-        if (this.lineStarted) {
-            this.svg.on("mousemove", () => this.mousemove());
-            let point = this.getCurrMousePoint();
-            points.push(point);
-        } else {
-            this.svg.on("mousemove", null);
-            let point = this.getCurrMousePoint();
-            this.undoManager.add(this.createUndoDict(point));
-        }
-
     };
 
     createUndoDict(point: any) {
@@ -303,7 +357,6 @@ export class EditorViewModel extends ViewModel {
             "y": this.mouseScaleY(mouse_point[1])
         };
         this.addPoint(point);
-        this.updatePolygons(true);
         this.updatePolygons();
     };
 
