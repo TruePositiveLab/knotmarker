@@ -283,18 +283,6 @@ export class EditorViewModel extends ViewModel {
         this.updatePolygons();
     }
 
-    onPolygonDrag(polygon: any){
-        if(this.startPoint === undefined){
-            let point = this.getCurrMousePoint();
-            this.startPoint = point;
-        }
-        //d3.event.stopPropagation();
-    }
-
-    onPolygonDragEnd(polygon: any){
-        this.startPoint = undefined;
-    }
-
     onPolygonMove(polygon: any){
         for(let i = 0; i < polygon.points.length; i++){
             polygon.points[i].x += d3.event.dx;
@@ -303,6 +291,11 @@ export class EditorViewModel extends ViewModel {
         this.updatePolygons();
     }
 
+    onCircleMove(circle: any){
+        circle.x += d3.event.dx;
+        circle.y -= d3.event.dy;
+        this.updatePolygons();
+    }
 
     onPolyline(line: any) {
           line.attr("points", (d: any) => this.getMappedPoints(d))
@@ -326,6 +319,7 @@ export class EditorViewModel extends ViewModel {
             .attr("stroke", stroke_color)
             .attr("stroke-width", 2)
             .attr("fill", stroke_color)
+            .call(d3.behavior.drag().on("drag", (p: any) => this.onCircleMove(p)))
             .on("click", (c: any) => this.onCircleClick(c));
     }
 
