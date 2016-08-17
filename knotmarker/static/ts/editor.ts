@@ -17,7 +17,7 @@ export class EditorViewModel extends ViewModel {
     hasRedo: KnockoutObservable<boolean> = ko.observable<boolean>();
     undoManager: any;
     svg: any;
-    lineStarted: boolean = false;
+    polyStarted: boolean = false;
     picId: string;
     width: number = 808;
     height: number = 608;
@@ -40,7 +40,7 @@ export class EditorViewModel extends ViewModel {
 
     fontSize: number = this.mouseScaleX(20);
     mainCircleRadius: number = this.mouseScaleX(10);
-    circleRadius: number = this.mouseScaleX(5);
+    circleRadius: number = this.mouseScaleX(3);
 
     constructor() {
         super();
@@ -63,8 +63,8 @@ export class EditorViewModel extends ViewModel {
         this.currDefect.subscribe(newVal => {
             if (newVal !== undefined) {
                 this.currType(newVal.type);
-                //this.updateCircles()
                 this.highlightPolygon(newVal);
+                this.canSave(true);
             }
         });
 
@@ -97,6 +97,10 @@ export class EditorViewModel extends ViewModel {
     delPoly() {
         this.polygons.remove(this.currDefect());
         this.currDefect(this.polygons()[0]);
+        if(this.polygons().length == 0)
+            this.svg
+                .selectAll("g[id^='poly']")
+                .remove();
         this.updatePolygons();
     };
 
@@ -155,9 +159,72 @@ export class EditorViewModel extends ViewModel {
         this.canSave(this.currDefect() !== undefined && this.currDefect().points.length > 0);
     };
 
+    drawEllipse(cx: number, cy: number, halfWidth: number, halfHeight: number){
+        let a = halfWidth*1.4;
+        let b = Math.sqrt(a*a*halfHeight*halfHeight/(a*a - halfWidth*halfWidth));
+
+        let leftPoint = {
+            "x": cx - a,
+            "y": cy
+        };
+
+        let rightPoint = {
+            "x": cx + a,
+            "y": cy
+        };
+
+        let topPoint = {
+            "x": cx,
+            "y": cy - b
+        };
+
+        let bottomPoint = {
+            "x": cx,
+            "y": cy + b
+        };
+
+        let topLeftPoint = {
+            "x": cx - halfWidth,
+            "y": cy - halfHeight
+        };
+
+        let topRightPoint = {
+            "x": cx + halfWidth,
+            "y": cy - halfHeight
+        };
+
+        let bottomLeftPoint = {
+            "x": cx - halfWidth,
+            "y": cy + halfHeight
+        };
+
+        let bottomRightPoint = {
+            "x": cx + halfWidth,
+            "y": cy + halfHeight
+        };
+        let points = this.currDefect().points;
+        points.push(leftPoint);
+        points.push(topLeftPoint);
+        points.push(topPoint);
+        points.push(topRightPoint);
+        points.push(rightPoint);
+        points.push(bottomRightPoint);
+        points.push(bottomPoint);
+        points.push(bottomLeftPoint);
+        points.push({
+            "x": cx - a,
+            "y": cy
+        });
+    }
+
     createPolygon(){
         this.addPoly();
-        this.createPoint(true);
+
+        this.polyStarted = true;
+        this.svg.on("mousemove", () => this.mousemove());
+        this.startPoint = this.getCurrMousePoint();
+
+        d3.event.stopPropagation();
     }
 
     updatePolygons() {
@@ -206,7 +273,6 @@ export class EditorViewModel extends ViewModel {
         //we remove groups that contains points(circles) of other polygons
         let ind: number = this.polygons.indexOf(polygon);
         let groupId: string = "poly"+ind;
-        console.log(groupId);
 
         this.svg
             .selectAll("g[id^='poly']")
@@ -217,12 +283,34 @@ export class EditorViewModel extends ViewModel {
         this.updatePolygons();
     }
 
+    onPolygonDrag(polygon: any){
+        if(this.startPoint === undefined){
+            let point = this.getCurrMousePoint();
+            this.startPoint = point;
+        }
+        //d3.event.stopPropagation();
+    }
+
+    onPolygonDragEnd(polygon: any){
+        this.startPoint = undefined;
+    }
+
+    onPolygonMove(polygon: any){
+        for(let i = 0; i < polygon.points.length; i++){
+            polygon.points[i].x += d3.event.dx;
+            polygon.points[i].y -= d3.event.dy;
+        }
+        this.updatePolygons();
+    }
+
+
     onPolyline(line: any) {
           line.attr("points", (d: any) => this.getMappedPoints(d))
             .attr("stroke", (d: any) => d.stroke_color)
             .attr("fill", "none")
             .attr("stroke-width", 3)
             .on("click", (l: any) => this.onPolygonClick(l))
+            .call(d3.behavior.drag().on("drag", (p: any) => this.onPolygonMove(p)))
             .each((p: any) => this.updateCircles(p))
     }
 
@@ -243,12 +331,8 @@ export class EditorViewModel extends ViewModel {
 
     onCircleClick(circle: any){
         if (d3.event.shiftKey) {
-            console.log(circle);
             let ind = this.currDefect().points.indexOf(circle);
-            console.log(ind);
             this.currDefect().points.splice(ind, 1);
-            console.log('this.currDefect().points');
-            console.log(this.currDefect().points);
             this.updatePolygons();
         }
     }
@@ -306,28 +390,44 @@ export class EditorViewModel extends ViewModel {
         }
     };
 
+    getDistance(pointA: any, pointB: any): number{
+        return Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2))
+    }
+
+    startPoint: any;
+    endPoint: any;
     createPoint(ignoreEvent: boolean = false) {
         if (d3.event.ctrlKey || ignoreEvent) {
+            let newPoint = this.getCurrMousePoint();
+            let points = this.currDefect().points;
+            let minDist = this.width;
+            let nearestPoint: any;
+            let currDist = this.width;
+            for(let i = 0; i < points.length; i++){
+                currDist = this.getDistance(newPoint, points[i]);
+                if(currDist < minDist){
+                    minDist = currDist;
+                    nearestPoint = points[i];
+                }
+            }
+
+            let ind = points.indexOf(nearestPoint);
+            let leftNeighbor = this.getDistance(newPoint, points[ind - 1]);
+            let rightNeighbor = this.getDistance(newPoint, points[ind + 1]);
+
+            ind += rightNeighbor > leftNeighbor? 0:1;
+            points.splice(ind, 0, newPoint);
+
+            this.updatePolygons();
+
+        } else {
             if (this.currDefect() === undefined)
                 return;
 
-            let points = this.currDefect().points;
-            if (points.length == 1) {
-                this.lineStarted = false;
-                let point = this.getCurrMousePoint();
-                points.push(point);
-            } else {
-                this.lineStarted = !this.lineStarted;
-            }
-
-            if (this.lineStarted) {
-                this.svg.on("mousemove", () => this.mousemove());
-                let point = this.getCurrMousePoint();
-                points.push(point);
-            } else {
+            if (this.polyStarted) {
                 this.svg.on("mousemove", null);
-                let point = this.getCurrMousePoint();
-                this.undoManager.add(this.createUndoDict(point));
+                this.startPoint = undefined;
+                this.polyStarted = !this.polyStarted;
             }
         }
     };
@@ -350,14 +450,16 @@ export class EditorViewModel extends ViewModel {
     }
 
     mousemove() {
-        this.currDefect().points.pop();
-        let mouse_point = d3.mouse(this.svg[0][0]);
-        let point = {
-            "x": this.mouseScaleX(mouse_point[0]),
-            "y": this.mouseScaleY(mouse_point[1])
-        };
-        this.addPoint(point);
-        this.updatePolygons();
+        if(this.startPoint !== undefined){
+            this.endPoint = this.getCurrMousePoint();
+            let cx = (this.startPoint.x + this.endPoint.x)/2;
+            let cy = (this.startPoint.y + this.endPoint.y)/2;
+            let halfWidth = Math.abs(this.startPoint.x - this.endPoint.x)/2;
+            let halfHeight = Math.abs(this.startPoint.y - this.endPoint.y)/2;
+            this.currDefect().points = [];
+            this.drawEllipse(cx, cy, halfWidth, halfHeight);
+            this.updatePolygons();
+        }
     };
 
     savePolygons() {
