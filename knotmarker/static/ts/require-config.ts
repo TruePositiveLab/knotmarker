@@ -8,7 +8,8 @@ require.config({
         "randomColor": "external/node_modules/randomcolor/randomColor",
         "nav": "nav",
         "gallery": "gallery",
-        "editor": "editor"
+        "editor": "editor",
+        "raven": "external/node_modules/raven-js/dist/raven.min"
     },
     shim: {
         'editor': ['randomColor','undomanager']
