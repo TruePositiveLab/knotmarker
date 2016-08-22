@@ -7,15 +7,28 @@
     {% if public_dsn %}
         <p>Нам уже известно о ней.</p>
         <p>ID события: {{ event_id }}</p>
-    {% endif %}k
+    {% endif %}
 </div>
 
 {% if public_dsn %}
   <script>
-  Raven.showReportDialog({
-    eventId: '{{ g.sentry_event_id }}',
-    dsn: '{{ public_dsn }}'
-  });
+  var intervalId = 0;
+  function showReport() {
+    if(Raven !== undefined) {
+        if(intervalId != 0)
+            clearInterval(intervalId);
+        Raven.showReportDialog({
+            eventId: '{{ g.sentry_event_id }}',
+            dsn: '{{ public_dsn }}'
+          });
+    }
+  }
+
+  if(Raven === undefined){
+      intervalId = setInterval(showReport, 100);
+  } else {
+      showReport();
+  }
   </script>
 {% endif %}
 {% endblock %}

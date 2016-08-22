@@ -26,6 +26,7 @@ class Polygon(db.EmbeddedDocument):
     stroke_color = db.StringField(required=True)
     points = db.ListField(db.EmbeddedDocumentField('Point'))
     center = db.EmbeddedDocumentField('Point')
+    meta = {'strict': False}
 
 
 class PolygonType(db.Document):
