@@ -24,56 +24,58 @@
 {% endblock %}
 
 {%block  content %}
-    <div class="row">
-        <div class="col-sm-12">
-           <svg id="svgPlace">
-            </svg>
-        </div>
-    </div>
-    <div class="row" id="editorVM">
-        <div class="col-sm-3">
-            <h4>Дефекты:</h4>
-            <select id="Polygons" class="form-control" style="margin-bottom: 5%"
-                    data-bind="attr:{ size: polygons().length }, foreach: polygons, value: currDefect">
-                <option data-bind="text: '[' + $root.polygons().indexOf($data)+'] ' + $root.polygonTypeName($data), style: {color: stroke_color}, value: $data"> </option>
-            </select>
-            <button class="btn btn-normal" data-bind="click: addPoly">Добавить</button>
-            <button class="btn btn-normal" data-bind="click: delPoly, enable: currDefect() != undefined">Удалить</button>
-        </div>
-        <div class="col-sm-3">
-            <h4>Тип дефекта:</h4>
-            <select id="defectType" class="form-control"
-            data-bind="attr:{ size:polygonTypes().length }, foreach: polygonTypes, value: currType, enable: currDefect() != undefined">
-                 <option data-bind="text: $data.readable_name, value: $data.type"> </option>
-            </select>
-            <h4>Или новый тип:</h4>
-            <input class="form-control" data-bind="value: newType, text: newType, enable: currDefect() != undefined"/>
-        </div>
-        <div class="col-sm-3" style="margin-top: 10px" >
-            <button class="btn btn-lg" data-bind="click: savePolygons, enable: canSave">Сохранить</button>
-        </div>
-        <div class="col-sm-3" style="margin-top: 10px" >
-            <div class="row">
-                <button class="btn btn-lg" data-bind="click: undoManager.undo, enable: hasUndo">Отменить</button>
-                <button class="btn btn-lg" data-bind="click: undoManager.redo, enable: hasRedo">Вернуть</button>
-            </div>
-            <div class="row" style="margin-top: 10px">
-{#                <button class="btn btn-lg" data-bind="click: occludePolygon, enable: currDefect() != undefined">Замкнуть</button>#}
-            </div>
-            <div class="row" style="margin-top: 10px">
-                 <button class="btn btn-lg btn-danger " data-bind="click: clearChanges" style="margin-top: 50px">Сбросить</button>
+    <div id="editorVM">
+        <div class="row">
+            <div class="col-sm-12">
+                <svg id="svgPlace">
+                </svg>
             </div>
         </div>
-    </div>
-    <div class="row">
-        {% if prev_pic %}
-            <a class="btn btn-lg" href="/pic/{{ prev_pic }}">Предыдущая</a>
-        {% endif %}
-        {% if next_pic %}
-            <a class="btn btn-lg" href="/pic/{{ next_pic }}">Следующая</a>
-        {% endif %}
-        {% if next_pic_without_markup %}
-            <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}">Следующая без разметки</a>
-        {% endif %}
+        <div class="row">
+            <div class="col-sm-3">
+                <h4>Дефекты:</h4>
+                <select id="Polygons" class="form-control" style="margin-bottom: 5%"
+                        data-bind="attr:{ size: polygons().length }, foreach: polygons, value: currDefect">
+                    <option data-bind="text: '[' + $root.polygons().indexOf($data)+'] ' + $root.polygonTypeName($data), style: {color: stroke_color}, value: $data"> </option>
+                </select>
+                <button class="btn btn-normal" data-bind="click: addPoly">Добавить</button>
+                <button class="btn btn-normal" data-bind="click: delPoly, enable: currDefect() != undefined">Удалить</button>
+            </div>
+            <div class="col-sm-3">
+                <h4>Тип дефекта:</h4>
+                <select id="defectType" class="form-control"
+                        data-bind="attr:{ size:polygonTypes().length }, foreach: polygonTypes, value: currType, enable: currDefect() != undefined">
+                    <option data-bind="text: $data.readable_name, value: $data.type"> </option>
+                </select>
+                <h4>Или новый тип:</h4>
+                <input class="form-control" data-bind="value: newType, text: newType, enable: currDefect() != undefined"/>
+            </div>
+            <div class="col-sm-3" style="margin-top: 10px" >
+                <button class="btn btn-lg" data-bind="click: savePolygons, enable: canSave">Сохранить</button>
+            </div>
+            <div class="col-sm-3" style="margin-top: 10px" >
+                <div class="row">
+                    <button class="btn btn-lg" data-bind="click: undoManager.undo, enable: hasUndo">Отменить</button>
+                    <button class="btn btn-lg" data-bind="click: undoManager.redo, enable: hasRedo">Вернуть</button>
+                </div>
+                <div class="row" style="margin-top: 10px">
+                    {#                <button class="btn btn-lg" data-bind="click: occludePolygon, enable: currDefect() != undefined">Замкнуть</button>#}
+                </div>
+                <div class="row" style="margin-top: 10px">
+                    <button class="btn btn-lg btn-danger " data-bind="click: clearChanges" style="margin-top: 50px">Сбросить</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            {% if prev_pic %}
+                <a class="btn btn-lg" href="/pic/{{ prev_pic }}" data-bind="click: nextPage">Предыдущая</a>
+            {% endif %}
+            {% if next_pic %}
+                <a class="btn btn-lg" href="/pic/{{ next_pic }}" data-bind="click: nextPage">Следующая</a>
+            {% endif %}
+            {% if next_pic_without_markup %}
+                <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}" data-bind="click: nextPage">Следующая без разметки</a>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}

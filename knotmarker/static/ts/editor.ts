@@ -5,6 +5,44 @@ declare var UndoManager: any;
 declare var RandomColor: any;
 declare var pic_id: string;
 
+
+class Point {
+    x: number;
+    y: number;
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    rotate(center: Point, angle: number) {
+        let oldX = this.x - center.x;
+        let oldY = this.y - center.y;
+        this.x = center.x + oldX*Math.cos(angle) - oldY*Math.sin(angle);
+        this.y = center.y + oldX*Math.sin(angle) + oldY*Math.cos(angle);
+    }
+
+    translate(dx: number, dy: number) {
+        this.x += dx;
+        this.y -= dy;
+    }
+}
+
+class Polygon {
+    type: string;
+    stroke_color: string;
+    points: Array<Point>;
+    center: Point;
+
+    constructor(stroke_color: string, type: string = "unknown",
+                points: Array<Point> = [], center: Point = new Point(0, 0)) {
+        this.type = type;
+        this.stroke_color = stroke_color;
+        this.points = points;
+        this.center = center;
+    }
+}
+
 export class EditorViewModel extends ViewModel {
     polygonTypes: KnockoutObservableArray<any> = ko.observableArray();
     polygons: KnockoutObservableArray<any> = ko.observableArray();
@@ -41,6 +79,7 @@ export class EditorViewModel extends ViewModel {
     fontSize: number = this.mouseScaleX(20);
     mainCircleRadius: number = this.mouseScaleX(10);
     circleRadius: number = this.mouseScaleX(3);
+    rotationAngleStep: number = 0.05 ;
 
     constructor() {
         super();
@@ -89,7 +128,7 @@ export class EditorViewModel extends ViewModel {
             "type": "unknown",
             "stroke_color": this.getNewColor(),
             "points": [],
-            "occluded": false
+            "center": new Point(0, 0)
         });
         this.currDefect(this.polygons().slice(-1)[0]);
     };
@@ -148,61 +187,45 @@ export class EditorViewModel extends ViewModel {
                 .attr("height", this.height);
         }
 
-        for (let i = 0; i < json.polygons.length; i++) {
-            if (json.polygons[i].occluded) {
-                json.polygons[i].points.push(json.polygons[i].points[0]);
+        //need to replace with some json-to-ts-mapper
+        let polygons: Array<Polygon> = [];
+        for(let i = 0; i < json.polygons.length; i++){
+            let poly = json.polygons[i];
+            let center = new Point(poly.center.x, poly.center.y);
+            let points: Array<Point> = [];
+            for(let j = 0; j < poly.points.length; j++){
+                let pt = poly.points[j];
+                points.push(new Point(pt.x, pt.y));
             }
+            polygons.push(new Polygon(poly.stroke_color, poly.type, points, center))
         }
-        this.polygons(json.polygons);
+
+        this.polygons(polygons);
         this.updatePolygons();
         this.currDefect(this.polygons()[0]);
         this.canSave(this.currDefect() !== undefined && this.currDefect().points.length > 0);
+
+        let body = d3.select("body");
+        body.on("keydown", () => this.onBodyKeydown());
+        body.on("wheel", () => this.onBodyWheel());
+        body.node().focus();
     };
 
     drawEllipse(cx: number, cy: number, halfWidth: number, halfHeight: number){
         let a = halfWidth*1.4;
         let b = Math.sqrt(a*a*halfHeight*halfHeight/(a*a - halfWidth*halfWidth));
 
-        let leftPoint = {
-            "x": cx - a,
-            "y": cy
-        };
+        let leftPoint = new Point(cx - a, cy);
+        let rightPoint = new Point(cx + a, cy);
+        let topPoint = new Point(cx, cy - b);
+        let bottomPoint = new Point(cx, cy + b);
+        let topLeftPoint = new Point(cx - halfWidth, cy - halfHeight);
+        let topRightPoint = new Point(cx + halfWidth, cy - halfHeight);
+        let bottomLeftPoint = new Point(cx - halfWidth, cy + halfHeight);
+        let bottomRightPoint = new Point(cx + halfWidth, cy + halfHeight);
 
-        let rightPoint = {
-            "x": cx + a,
-            "y": cy
-        };
-
-        let topPoint = {
-            "x": cx,
-            "y": cy - b
-        };
-
-        let bottomPoint = {
-            "x": cx,
-            "y": cy + b
-        };
-
-        let topLeftPoint = {
-            "x": cx - halfWidth,
-            "y": cy - halfHeight
-        };
-
-        let topRightPoint = {
-            "x": cx + halfWidth,
-            "y": cy - halfHeight
-        };
-
-        let bottomLeftPoint = {
-            "x": cx - halfWidth,
-            "y": cy + halfHeight
-        };
-
-        let bottomRightPoint = {
-            "x": cx + halfWidth,
-            "y": cy + halfHeight
-        };
         let points = this.currDefect().points;
+        this.currDefect().center = new Point(cx, cy);
         points.push(leftPoint);
         points.push(topLeftPoint);
         points.push(topPoint);
@@ -211,10 +234,6 @@ export class EditorViewModel extends ViewModel {
         points.push(bottomRightPoint);
         points.push(bottomPoint);
         points.push(bottomLeftPoint);
-        points.push({
-            "x": cx - a,
-            "y": cy
-        });
     }
 
     createPolygon(){
@@ -229,11 +248,11 @@ export class EditorViewModel extends ViewModel {
 
     updatePolygons() {
         let polygons  = this.getPolygons();
-        let polylines = this.svg.selectAll("polyline")
+        let polylines = this.svg.selectAll("polygon")
             .data(polygons);
 
         polylines.enter()
-            .append("polyline")
+            .append("polygon")
             .call((l: any) => this.onPolyline(l));
         polylines.call((l: any) => this.onPolyline(l));
         polylines.call((x: any) => this.onClear(x));
@@ -285,9 +304,47 @@ export class EditorViewModel extends ViewModel {
 
     onPolygonMove(polygon: any){
         for(let i = 0; i < polygon.points.length; i++){
-            polygon.points[i].x += d3.event.dx;
-            polygon.points[i].y -= d3.event.dy;
+            polygon.points[i].translate(d3.event.dx, d3.event.dy);
         }
+        polygon.center.translate(d3.event.dx, d3.event.dy);
+        this.updatePolygons();
+    }
+
+    onBodyKeydown(){
+        if(d3.event.key == "Escape" && confirm('Удалить текущий полигон?'))
+        {
+            this.delPoly();
+            this.svg.on("mousemove", null);
+            this.startPoint = undefined;
+            this.polyStarted = !this.polyStarted;
+        }
+
+        if(d3.event.key == "ArrowUp"){
+            this.rotateCurrDefect(-this.rotationAngleStep);
+        }
+
+        if(d3.event.key == "ArrowDown"){
+            this.rotateCurrDefect(this.rotationAngleStep);
+        }
+    }
+
+    onBodyWheel() {
+        let angle = d3.event.deltaY < 0 ? this.rotationAngleStep : -this.rotationAngleStep;
+        this.rotateCurrDefect(angle);
+    }
+
+    nextPage() {
+        if(this.canSave() && confirm("Сохранить изменения?")){
+            this.savePolygons();
+        }
+        return true;
+    }
+
+    rotateCurrDefect(angle: number) {
+        if(this.currDefect === undefined)
+            return;
+        let poly = this.currDefect();
+        poly.points.forEach((x: Point) => x.rotate(poly.center, angle));
         this.updatePolygons();
     }
 
@@ -324,7 +381,7 @@ export class EditorViewModel extends ViewModel {
     }
 
     onCircleClick(circle: any){
-        if (d3.event.shiftKey) {
+        if (d3.event.shiftKey && this.currDefect().points.length > 3) {
             let ind = this.currDefect().points.indexOf(circle);
             this.currDefect().points.splice(ind, 1);
             this.updatePolygons();
@@ -357,18 +414,6 @@ export class EditorViewModel extends ViewModel {
     getCircleY(point: any, offset:number = 0) {
         return this.scaleY(point.y) + offset;
     }
-
-    occludePolygon() {
-        let def = this.currDefect();
-        if (!def.occluded) {
-            def.points.push(def.points[0]);
-            def.occluded = true;
-        } else {
-            this.currDefect().occluded = false;
-            this.currDefect().points.pop();
-        }
-        this.updatePolygons();
-    };
 
     addPoint(point: any) {
         this.currDefect().points.push(point);
@@ -406,8 +451,11 @@ export class EditorViewModel extends ViewModel {
             }
 
             let ind = points.indexOf(nearestPoint);
-            let leftNeighbor = this.getDistance(newPoint, points[ind - 1]);
-            let rightNeighbor = this.getDistance(newPoint, points[ind + 1]);
+            let leftInd = ind - 1 >= 0 ? ind - 1 : points.length - 1;
+            let rightInd = ind + 1 <= points.length - 1 ? ind + 1 : 0;
+
+            let leftNeighbor = this.getDistance(newPoint, points[leftInd]);
+            let rightNeighbor = this.getDistance(newPoint, points[rightInd]);
 
             ind += rightNeighbor > leftNeighbor? 0:1;
             points.splice(ind, 0, newPoint);
@@ -436,11 +484,7 @@ export class EditorViewModel extends ViewModel {
 
     getCurrMousePoint() {
         let mouse_point = d3.mouse(this.svg[0][0]);
-        let point = {
-            "x": this.mouseScaleX(mouse_point[0]),
-            "y": this.mouseScaleY(mouse_point[1])
-        };
-        return point;
+        return new Point(this.mouseScaleX(mouse_point[0]), this.mouseScaleY(mouse_point[1]));
     }
 
     mousemove() {

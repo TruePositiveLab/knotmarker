@@ -46,7 +46,7 @@ polygon_fields = {
     'type': fields.String,
     'stroke_color': fields.String,
     'points': fields.List(fields.Nested(point_fields)),
-    'occluded': fields.Boolean
+    'center': fields.Nested(point_fields)
 }
 
 rect_fields = {
