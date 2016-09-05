@@ -62,7 +62,7 @@
                                 {% endif %}
                             </div>
                     {% else %}
-                        <a href="/pic/{{ pic }}" class="thumbnail {{ pic_css }}">
+                        <a href="/pic/{{ pic }}/{{ current_user.id }}" class="thumbnail {{ pic_css }}">
                             <img src="/pic/thumb/{{ pic }}.png">
                             <p class="text-center">{{ pic }}</p>
                         </a>
