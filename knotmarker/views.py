@@ -5,7 +5,7 @@ from flask.ext.security import current_user
 from flask.ext.security import login_required
 
 from .application import app
-from .models import MarkedUpImage
+from .models import MarkedUpImage, User
 
 
 @app.route("/")
@@ -23,26 +23,40 @@ def gallery():
         pcs_per_page * (page_num - 1)).limit(pcs_per_page)
     len_of_pictures = MarkedUpImage.objects().count()
     num_of_pages = int(len_of_pictures / pcs_per_page + 1)
-    return render_template('gallery.html',
-                           pictures=pictures,
-                           num_of_pages=num_of_pages,
-                           curr_num=page_num,
-                           pcs_per_page=pcs_per_page)
 
-
-@app.route('/pic/<string:pic_id>')
-@login_required
-def edit_image(pic_id):
-    next_pic_wo_markup = MarkedUpImage.next_image(pic_id,
-                                                  current_user,
-                                                  without_markup=True)
     context = {
-        'pic_id': pic_id,
-        'next_pic': MarkedUpImage.next_image(pic_id),
-        'prev_pic': MarkedUpImage.previous_image(pic_id),
-        'next_pic_without_markup': next_pic_wo_markup
+        'pictures': pictures,
+        'num_of_pages': num_of_pages,
+        'curr_num': page_num,
+        'cs_per_page': pcs_per_page,
+        'current_user': current_user
     }
-    return render_template('editor.html', **context)
+    return render_template('gallery.html', **context)
+
+
+@app.route('/pic/<string:pic_id>/<string:user_id>')
+@login_required
+def edit_image(pic_id, user_id):
+    if current_user.id == user_id or current_user.has_role('admin'):
+        next_pic_wo_markup = MarkedUpImage.next_image(pic_id,
+                                                      current_user,
+                                                      without_markup=True)
+        markedup_image = MarkedUpImage.image_by_id(pic_id).first()
+
+        user_email = ''
+        if current_user.has_role('admin') and str(current_user.id) != user_id:
+            user_email = User.objects.filter(id=user_id).first().email
+
+        context = {
+            'pic_id': pic_id,
+            'user_id': user_id,
+            'next_pic': MarkedUpImage.next_image(pic_id),
+            'prev_pic': MarkedUpImage.previous_image(pic_id),
+            'next_pic_without_markup': next_pic_wo_markup,
+            'users_polygons': markedup_image.users_polygons,
+            'user_email': user_email
+        }
+        return render_template('editor.html', **context)
 
 
 @app.route('/pic/<string:pic_id>.png')

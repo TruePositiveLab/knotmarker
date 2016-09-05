@@ -6,8 +6,11 @@
 
 {% block head %}
     <script>
+        var pageNum = {{ curr_num + 1 }}
+        var picsPerPage = {{ pcs_per_page }}
         require(["gallery"]);
     </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
 {% endblock %}
 
 {%block  content %}
@@ -28,14 +31,49 @@
         {% for pic in pictures %}
             {% if pic != "" %}
                 <div class="col-md-3">
-                  <a href="/pic/{{ pic }}" class="thumbnail">
-                    <img src="/pic/thumb/{{ pic }}.png" style="width:150px;height:150px">
-                    <p class="text-center">{{ pic }}</p>
-                  </a>
+                    {% set pic_css = '' %}
+                    {% if current_user.id | exists_in(pic.users_polygons) %}
+                        {% set pic_css = 'pic-done' %}
+                    {% endif %}
+
+                    {% if current_user.has_role('admin') %}
+                            {% set col_cnt = 12 %}
+                            {% if  pic.users_polygons | length > 0 %}
+                                {% set col_cnt = 6 %}
+                            {% endif %}
+                            <div class="pic-info-border">
+                                <a href="/pic/{{ pic }}/{{ current_user.id }}" class="col-md-{{ col_cnt }} thumbnail {{ pic_css }}">
+                                    <img src="/pic/thumb/{{ pic }}.png">
+                                    <p class="text-center">{{ pic }}</p>
+                                </a>
+                                {% if  pic.users_polygons | length > 0 %}
+                                    <div class="col-md-{{ col_cnt }}">
+                                        <p class="text-center">Пользователи</p>
+                                        <ol class="users-list">
+                                            {% for poly in pic.users_polygons %}
+                                                <li>
+                                                    <a href="/pic/{{ pic }}/{{ poly.user.id }}">{{ poly.user.email | trim_email }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ol>
+                                    </div>
+                                {% else %}
+                                    <div class="col-md-offset-{{ col_cnt }}"></div>
+                                {% endif %}
+                            </div>
+                    {% else %}
+                        <a href="/pic/{{ pic }}" class="thumbnail {{ pic_css }}">
+                            <img src="/pic/thumb/{{ pic }}.png">
+                            <p class="text-center">{{ pic }}</p>
+                        </a>
+                    {% endif %}
                 </div>
             {% endif %}
+            {% if loop.index % 4 == 0 %}
+                </div>
+                <div class="row">
+            {% endif %}
         {% endfor %}
-        </div>
     </div>
     <div class="row">
         <nav>

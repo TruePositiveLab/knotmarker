@@ -71,8 +71,8 @@ class PolygonsByImage(Resource):
 
     @login_required
     @marshal_with(polygons_by_image_fields)
-    def get(self, pic_id: str) -> Dict[str, Any]:
-        image = MarkedUpImage.polygons(pic_id, current_user).first()
+    def get(self, pic_id: str, user_id: str) -> Dict[str, Any]:
+        image = MarkedUpImage.polygons(pic_id, user_id).first()
         res = []  # type: Iterable[Any]
 
         if image is None:
@@ -83,7 +83,7 @@ class PolygonsByImage(Resource):
             }
 
         for up in image.users_polygons:
-            if up.username == current_user.email:
+            if str(up.user.id) == user_id:
                 res = up.polygons
                 break
 
@@ -100,14 +100,14 @@ class PolygonsByImage(Resource):
         return polygons
 
     @login_required
-    def post(self, pic_id: str) -> Dict[str, Any]:
+    def post(self, pic_id: str, user_id: str) -> Dict[str, Any]:
         # TODO: request validation
-        polygons = MarkedUpImage.polygons(pic_id, current_user)
+        polygons = MarkedUpImage.polygons(pic_id, user_id)
 
         if len(polygons) == 0:
             MarkedUpImage.image_by_id(pic_id).upsert_one(
-                add_to_set__users_polygons={'username': current_user.email})
-            polygons = MarkedUpImage.polygons(pic_id, current_user)
+                add_to_set__users_polygons={'user': user_id})
+            polygons = MarkedUpImage.polygons(pic_id, user_id)
 
         updated_polygons = self.to_polygons(request.json)
 
@@ -119,4 +119,4 @@ class PolygonsByImage(Resource):
         return {'status': 'ok'}
 
 api.add_resource(PolygonTypes, '/polygon_types')
-api.add_resource(PolygonsByImage, '/pic/<string:pic_id>/polygons')
+api.add_resource(PolygonsByImage, '/pic/<string:pic_id>/<string:user_id>/polygons')

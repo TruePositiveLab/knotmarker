@@ -12,6 +12,7 @@
     </style>
     <script>
         var pic_id = '{{ pic_id }}';
+        var user_id = '{{ user_id }}';
         var UndoManager, RandomColor;
         require(["randomColor", "undomanager", "editor"],
                 function(randomColor, undoManager, editor) {
@@ -25,6 +26,14 @@
 
 {%block  content %}
     <div id="editorVM">
+        {% if current_user.has_role('admin') and user_email != '' %}
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4>Разметка пользователя {{ user_email | trim_email }}</h4>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="row">
             <div class="col-sm-12">
                 <svg id="svgPlace">
@@ -52,6 +61,16 @@
             </div>
             <div class="col-sm-3" style="margin-top: 10px" >
                 <button class="btn btn-lg" data-bind="click: savePolygons, enable: canSave">Сохранить</button>
+                {% if current_user.has_role('admin') %}
+                    <h4>Пользователи:</h4>
+                    <ol>
+                        {% for poly in users_polygons %}
+                            <li>
+                                <a href="/pic/{{ pic_id }}/{{ poly.user.id }}">{{ poly.user.email | trim_email }}</a>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
             </div>
             <div class="col-sm-3" style="margin-top: 10px" >
                 <div class="row">
@@ -68,13 +87,13 @@
         </div>
         <div class="row">
             {% if prev_pic %}
-                <a class="btn btn-lg" href="/pic/{{ prev_pic }}" data-bind="click: nextPage">Предыдущая</a>
+                <a class="btn btn-lg" href="/pic/{{ prev_pic }}/{{ user_id }}" data-bind="click: nextPage">Предыдущая</a>
             {% endif %}
             {% if next_pic %}
-                <a class="btn btn-lg" href="/pic/{{ next_pic }}" data-bind="click: nextPage">Следующая</a>
+                <a class="btn btn-lg" href="/pic/{{ next_pic }}/{{ user_id }}" data-bind="click: nextPage">Следующая</a>
             {% endif %}
-            {% if next_pic_without_markup %}
-                <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}" data-bind="click: nextPage">Следующая без разметки</a>
+            {% if next_pic_without_markup and current_user.has_role('admin') and user_email == '' %}
+                <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}/{{ user_id }}" data-bind="click: nextPage">Следующая без разметки</a>
             {% endif %}
         </div>
     </div>

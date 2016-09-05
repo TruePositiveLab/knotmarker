@@ -1,0 +1,28 @@
+.pic-done {
+    background-color: lightgreen;
+}
+.thumbnail > img {
+    height: 150px;
+    width: 150px;
+}
+.users-list {
+    max-height: 160px;
+    overflow-y: auto;
+}
+.thumbnail {
+    border: none;
+}
+.pic-info-border {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: inline-block;
+}
+.text-center {
+    margin-bottom: 0px;
+}
+ol {
+    padding-left: 20px;
+}
+.col-md-3:not(:first-child){
+    padding-left: 0px;
+}

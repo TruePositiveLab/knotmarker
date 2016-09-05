@@ -50,8 +50,24 @@ class PolygonType(db.Document):
         return queryset.filter(Q(creator='system') | Q(popularity__gt=5))
 
 
+class Role(db.Document, RoleMixin):
+    name = db.StringField(max_length=80, unique=True)
+    description = db.StringField(max_length=255)
+
+    def __unicode__(self):
+        return self.name
+
+
+class User(db.Document, UserMixin):
+    email = db.StringField(max_length=255)
+    password = db.StringField(max_length=255)
+    active = db.BooleanField(default=True)
+    confirmed_at = db.DateTimeField()
+    roles = db.ListField(db.ReferenceField(Role), default=[], )
+
+
 class UserPolygon(db.EmbeddedDocument):
-    username = db.StringField(required=True)
+    user = db.ReferenceField(User)
     polygons = db.ListField(db.EmbeddedDocumentField('Polygon'))
 
 
@@ -72,9 +88,9 @@ class MarkedUpImage(db.Document):
         return self.filename
 
     @queryset_manager
-    def polygons(cls, queryset, pic_id, current_user):
+    def polygons(cls, queryset, pic_id, user_id):
         return queryset.filter(filename=pic_id,
-                               users_polygons__username=current_user.email)
+                               users_polygons__user=user_id)
 
     @queryset_manager
     def image_by_id(cls, queryset, pic_id):
@@ -86,7 +102,7 @@ class MarkedUpImage(db.Document):
         qs = queryset.filter(filename__gt=pic_id)
         if without_markup:
             qs = qs.filter(
-                Q(users_polygons__not__match={"username": current_user.email}))
+                Q(users_polygons__not__match={"user": current_user}))
         return qs.first()
 
     @queryset_manager
@@ -101,14 +117,4 @@ class MarkedUpImage(db.Document):
     }
 
 
-class Role(db.Document, RoleMixin):
-    name = db.StringField(max_length=80, unique=True)
-    description = db.StringField(max_length=255)
 
-
-class User(db.Document, UserMixin):
-    email = db.StringField(max_length=255)
-    password = db.StringField(max_length=255)
-    active = db.BooleanField(default=True)
-    confirmed_at = db.DateTimeField()
-    roles = db.ListField(db.ReferenceField(Role), default=[])

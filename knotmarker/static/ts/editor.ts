@@ -4,6 +4,7 @@ import { ViewModel } from "viewmodel";
 declare var UndoManager: any;
 declare var RandomColor: any;
 declare var pic_id: string;
+declare var user_id: string;
 
 
 class Point {
@@ -57,6 +58,7 @@ export class EditorViewModel extends ViewModel {
     svg: any;
     polyStarted: boolean = false;
     picId: string;
+    userId: string;
     width: number = 808;
     height: number = 608;
     htmlElemName: string = 'editorVM';
@@ -84,6 +86,7 @@ export class EditorViewModel extends ViewModel {
     constructor() {
         super();
         this.picId = pic_id;
+        this.userId = user_id;
         this.newType.subscribe(newVal => {
             if (newVal !== "") {
                 this.currDefect().type = newVal;
@@ -166,7 +169,7 @@ export class EditorViewModel extends ViewModel {
     };
 
     loadPolygons() {
-        d3.json("/pic/" + this.picId + "/polygons", json => this.initPolygons(json));
+        d3.json(`/pic/${ this.picId }/${ this.userId }/polygons`, json => this.initPolygons(json));
     }
 
     initPolygons(json: any) {
@@ -203,7 +206,8 @@ export class EditorViewModel extends ViewModel {
         this.polygons(polygons);
         this.updatePolygons();
         this.currDefect(this.polygons()[0]);
-        this.canSave(this.currDefect() !== undefined && this.currDefect().points.length > 0);
+        this.canSave(false);
+        //this.currDefect() !== undefined && this.currDefect().points.length > 0
 
         let body = d3.select("body");
         body.on("keydown", () => this.onBodyKeydown());
@@ -308,6 +312,7 @@ export class EditorViewModel extends ViewModel {
         }
         polygon.center.translate(d3.event.dx, d3.event.dy);
         this.updatePolygons();
+        this.canSave(true);
     }
 
     onBodyKeydown(){
@@ -346,12 +351,14 @@ export class EditorViewModel extends ViewModel {
         let poly = this.currDefect();
         poly.points.forEach((x: Point) => x.rotate(poly.center, angle));
         this.updatePolygons();
+        this.canSave(true);
     }
 
     onCircleMove(circle: any){
         circle.x += d3.event.dx;
         circle.y -= d3.event.dy;
         this.updatePolygons();
+        this.canSave(true);
     }
 
     onPolyline(line: any) {
@@ -385,6 +392,7 @@ export class EditorViewModel extends ViewModel {
             let ind = this.currDefect().points.indexOf(circle);
             this.currDefect().points.splice(ind, 1);
             this.updatePolygons();
+            this.canSave(true);
         }
     }
 
@@ -501,11 +509,12 @@ export class EditorViewModel extends ViewModel {
     };
 
     savePolygons() {
-        d3.json("/pic/" + this.picId + "/polygons")
+        d3.json(`/pic/${ this.picId }/${ this.userId }/polygons`)
             .header("Content-Type", "application/json")
             .post(JSON.stringify(this.polygons()), function(error, data) {
                 // callback
             });
+        this.canSave(false);
     };
 
     clearChanges() {

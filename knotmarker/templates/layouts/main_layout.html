@@ -58,6 +58,11 @@
                         </li>
                     {% endif %}
                 {% else %}
+                    {% if current_user.has_role('admin') %}
+                        <li>
+                          <a href="/admin">Администрирование</a>
+                        </li>
+                    {% endif %}
                     <li>
                       <a href="{{ url_for_security('logout') }}">Выйти</a>
                     </li>
