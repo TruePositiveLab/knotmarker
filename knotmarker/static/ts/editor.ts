@@ -205,9 +205,8 @@ export class EditorViewModel extends ViewModel {
 
         this.polygons(polygons);
         this.updatePolygons();
-        this.currDefect(this.polygons()[0]);
+        // this.currDefect(this.polygons()[0]);
         this.canSave(false);
-        //this.currDefect() !== undefined && this.currDefect().points.length > 0
 
         let body = d3.select("body");
         body.on("keydown", () => this.onBodyKeydown());

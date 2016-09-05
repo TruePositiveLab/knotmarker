@@ -12,7 +12,6 @@ from flask_mail import Mail
 from speaklater import is_lazy_string
 import flask_admin as admin
 from .viewmodels import UserModelView, AdminIndexView
-import os
 
 app = Flask(__name__)
 
@@ -88,14 +87,6 @@ security = Security(app, user_datastore)
 admin = admin.Admin(app, 'Knotmarker', index_view=AdminIndexView(), template_mode='bootstrap3')
 admin.add_view(UserModelView(User))
 admin.add_view(UserModelView(Role))
-
-
-@app.before_first_request
-def before_first_request():
-    email = os.environ.get('ADD_TO_ADMIN', None)
-    if email and user_datastore.get_user(email):
-        user_datastore.add_role_to_user(email, 'admin')
-
 
 from .forms import *  # noqa
 from .views import *  # noqa

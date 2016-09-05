@@ -92,7 +92,7 @@
             {% if next_pic %}
                 <a class="btn btn-lg" href="/pic/{{ next_pic }}/{{ user_id }}" data-bind="click: nextPage">Следующая</a>
             {% endif %}
-            {% if next_pic_without_markup and current_user.has_role('admin') and user_email == '' %}
+            {% if next_pic_without_markup and user_email == '' %}
                 <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}/{{ user_id }}" data-bind="click: nextPage">Следующая без разметки</a>
             {% endif %}
         </div>

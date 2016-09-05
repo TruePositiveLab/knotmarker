@@ -37,7 +37,7 @@ def gallery():
 @app.route('/pic/<string:pic_id>/<string:user_id>')
 @login_required
 def edit_image(pic_id, user_id):
-    if current_user.id == user_id or current_user.has_role('admin'):
+    if str(current_user.id) == user_id or current_user.has_role('admin'):
         next_pic_wo_markup = MarkedUpImage.next_image(pic_id,
                                                       current_user,
                                                       without_markup=True)
