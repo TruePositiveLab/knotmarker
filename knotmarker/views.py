@@ -28,7 +28,7 @@ def gallery():
         'pictures': pictures,
         'num_of_pages': num_of_pages,
         'curr_num': page_num,
-        'cs_per_page': pcs_per_page,
+        'pcs_per_page': pcs_per_page,
         'current_user': current_user
     }
     return render_template('gallery.html', **context)
