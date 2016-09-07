@@ -1,6 +1,7 @@
 import * as ko from "knockout";
 import * as d3 from "d3";
 import { ViewModel } from "viewmodel";
+import centroid = d3.geo.centroid;
 declare var UndoManager: any;
 declare var RandomColor: any;
 declare var pic_id: string;
@@ -41,6 +42,13 @@ class Polygon {
         this.stroke_color = stroke_color;
         this.points = points;
         this.center = center;
+    }
+
+    updateCenter() {
+        let x = 0;
+        let y = 0;
+        this.points.forEach(p => {x += p.x; y += p.y});
+        this.center = new Point(x/this.points.length, y/this.points.length);
     }
 }
 
@@ -391,6 +399,7 @@ export class EditorViewModel extends ViewModel {
     onCircleMove(circle: any){
         circle.x += d3.event.dx;
         circle.y -= d3.event.dy;
+        this.currDefect().updateCenter();
         this.updatePolygons();
         this.canSave(true);
     }
@@ -423,8 +432,10 @@ export class EditorViewModel extends ViewModel {
 
     onCircleClick(circle: any){
         if (d3.event.shiftKey && this.currDefect().points.length > 3) {
-            let ind = this.currDefect().points.indexOf(circle);
-            this.currDefect().points.splice(ind, 1);
+            let poly = this.currDefect();
+            let ind = poly.points.indexOf(circle);
+            poly.updateCenter();
+            poly.points.splice(ind, 1);
             this.updatePolygons();
             this.canSave(true);
             d3.event.stopPropagation();
@@ -502,8 +513,9 @@ export class EditorViewModel extends ViewModel {
 
             ind += rightNeighbor > leftNeighbor? 0:1;
             points.splice(ind, 0, newPoint);
-
+            this.currDefect().updateCenter();
             this.updatePolygons();
+            d3.event.stopPropagation();
 
         } else {
             if (this.currDefect() === undefined)
@@ -529,6 +541,7 @@ export class EditorViewModel extends ViewModel {
         let mouse_point = d3.mouse(this.svg[0][0]);
         return new Point(this.mouseScaleX(mouse_point[0]), this.mouseScaleY(mouse_point[1]));
     }
+
 
     mousemove() {
         if(this.startPoint !== undefined){
