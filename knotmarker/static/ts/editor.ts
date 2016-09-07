@@ -107,6 +107,8 @@ export class EditorViewModel extends ViewModel {
                 this.currType(newVal.type);
                 this.highlightPolygon(newVal);
                 this.canSave(true);
+            } else {
+                this.disablePolygonHighlight();
             }
         });
 
@@ -124,6 +126,13 @@ export class EditorViewModel extends ViewModel {
             }
             return mapping;
         }, this);
+    }
+
+    disablePolygonHighlight(){
+        this.svg
+            .selectAll("g[id^='poly']")
+            .remove();
+        this.updatePolygons();
     }
 
     addPoly() {
@@ -211,6 +220,7 @@ export class EditorViewModel extends ViewModel {
         let body = d3.select("body");
         body.on("keydown", () => this.onBodyKeydown());
         body.on("wheel", () => this.onBodyWheel());
+        body.on("click", () => this.onBodyClick());
         body.node().focus();
     };
 
@@ -268,8 +278,7 @@ export class EditorViewModel extends ViewModel {
         polylines.call((x: any) => this.onClear(x));
     }
 
-    onClear(fig: any)
-    {
+    onClear(fig: any) {
         fig.exit().remove();
     }
 
@@ -322,6 +331,8 @@ export class EditorViewModel extends ViewModel {
     }
 
     onBodyKeydown(){
+        if(this.currDefect() === undefined)
+            return;
         if(d3.event.key == "Escape" && confirm('Удалить текущий полигон?'))
         {
             this.delPoly();
@@ -332,16 +343,29 @@ export class EditorViewModel extends ViewModel {
 
         if(d3.event.key == "ArrowUp"){
             this.rotateCurrDefect(-this.rotationAngleStep);
+            d3.event.preventDefault();
         }
 
         if(d3.event.key == "ArrowDown"){
             this.rotateCurrDefect(this.rotationAngleStep);
+            d3.event.preventDefault();
         }
     }
 
     onBodyWheel() {
+        if(this.currDefect() === undefined)
+            return;
         let angle = d3.event.deltaY < 0 ? this.rotationAngleStep : -this.rotationAngleStep;
         this.rotateCurrDefect(angle);
+        d3.event.preventDefault();
+        d3.event.stopPropagation();
+    }
+
+    onBodyClick() {
+        if(!d3.event.defaultPrevented){
+            this.currDefect(undefined);
+            d3.event.stopPropagation();
+        }
     }
 
     nextPage() {
@@ -351,9 +375,13 @@ export class EditorViewModel extends ViewModel {
         return true;
     }
 
+    newPolyAngle: number = 0;
     rotateCurrDefect(angle: number) {
         if(this.currDefect === undefined)
             return;
+        if (this.polyStarted) {
+            this.newPolyAngle += angle;
+        }
         let poly = this.currDefect();
         poly.points.forEach((x: Point) => x.rotate(poly.center, angle));
         this.updatePolygons();
@@ -399,6 +427,7 @@ export class EditorViewModel extends ViewModel {
             this.currDefect().points.splice(ind, 1);
             this.updatePolygons();
             this.canSave(true);
+            d3.event.stopPropagation();
         }
     }
 
@@ -510,6 +539,11 @@ export class EditorViewModel extends ViewModel {
             let halfHeight = Math.abs(this.startPoint.y - this.endPoint.y)/2;
             this.currDefect().points = [];
             this.drawEllipse(cx, cy, halfWidth, halfHeight);
+            if(this.newPolyAngle != 0){
+                let tmp = this.newPolyAngle;
+                this.newPolyAngle = 0;
+                this.rotateCurrDefect(tmp);
+            }
             this.updatePolygons();
         }
     };
