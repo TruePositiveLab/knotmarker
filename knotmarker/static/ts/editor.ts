@@ -239,6 +239,13 @@ export class EditorViewModel extends ViewModel {
         points.push(bottomLeftPoint);
     }
 
+    polygonsOpacity(opacity: number){
+        let polygons  = this.getPolygons();
+        let polylines = this.svg.selectAll("polygon")
+            .data(polygons);
+        polylines.style("opacity", opacity);
+    }
+
     createPolygon(){
         this.addPoly();
 
