@@ -143,9 +143,15 @@ export class EditorViewModel extends ViewModel {
         this.updatePolygons();
     }
 
-    addPoly() {
+    addPoly(createElipse: boolean = true) {
         this.polygons.push(new Polygon(this.getNewColor()));
         this.currDefect(this.polygons().slice(-1)[0]);
+        if(createElipse){
+            let rect = this.svg.node().getBoundingClientRect();
+            let halfWidth = rect.width/30;
+            this.drawEllipse(rect.width/2, this.scaleY(rect.height/2), halfWidth, halfWidth);
+            this.updatePolygons()
+        }
     };
 
     delPoly() {
@@ -261,7 +267,7 @@ export class EditorViewModel extends ViewModel {
     }
 
     createPolygon(){
-        this.addPoly();
+        this.addPoly(false);
 
         this.polyStarted = true;
         this.svg.on("mousemove", () => this.mousemove());
