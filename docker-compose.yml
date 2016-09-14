@@ -11,6 +11,7 @@ webapp:
         KNOTMARKER_SENTRY_DSN:
         KNOTMARKER_SECRET_KEY:
         KNOTMARKER_MAIL_PASSWORD:
+		KNOTMARKER_PASSWORD_SALT:
     links:
         - mongodb
     volumes:
