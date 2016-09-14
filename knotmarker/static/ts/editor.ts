@@ -192,6 +192,7 @@ export class EditorViewModel extends ViewModel {
 
     initPolygons(json: any) {
         let boardRect = json.rect;
+        d3.selectAll("svg > *").remove();
         this.svg = d3.select("body")
             .select("#svgPlace")
             .attr("width", boardRect.w - boardRect.x)
