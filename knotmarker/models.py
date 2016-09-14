@@ -58,6 +58,14 @@ class Role(db.Document, RoleMixin):
         return self.name
 
 
+class Category(db.Document):
+    name = db.StringField(max_length=80, unique=True)
+    description = db.StringField(max_length=255)
+
+    def __unicode__(self):
+        return self.name
+
+
 class User(db.Document, UserMixin):
     email = db.StringField(max_length=255)
     password = db.StringField(max_length=255)
@@ -78,28 +86,29 @@ def utcnow():
 
 class MarkedUpImage(db.Document):
     created_at = db.DateTimeField(default=utcnow, required=True)
-    filename = db.StringField(primary_key=True, max_length=255, required=True)
+    filename = db.StringField(max_length=255, required=True)
     image = db.FileField()
     image_thumbnail = db.FileField()
     rect = db.EmbeddedDocumentField('Rect')
     users_polygons = db.ListField(db.EmbeddedDocumentField('UserPolygon'))
+    category = db.ReferenceField(Category)
 
     def __unicode__(self):
         return self.filename
 
     @queryset_manager
     def polygons(cls, queryset, pic_id, user_id):
-        return queryset.filter(filename=pic_id,
+        return queryset.filter(id=pic_id,
                                users_polygons__user=user_id)
 
     @queryset_manager
     def image_by_id(cls, queryset, pic_id):
-        return queryset.filter(filename=pic_id)
+        return queryset.filter(id=pic_id)
 
     @queryset_manager
     def next_image(cls, queryset, pic_id,
                    current_user=None, without_markup=False):
-        qs = queryset.filter(filename__gt=pic_id)
+        qs = queryset.filter(id__gt=pic_id)
         if without_markup:
             qs = qs.filter(
                 Q(users_polygons__not__match={"user": current_user}))
@@ -107,7 +116,7 @@ class MarkedUpImage(db.Document):
 
     @queryset_manager
     def previous_image(cls, queryset, pic_id):
-        return queryset.filter(filename__lt=pic_id)\
+        return queryset.filter(id__lt=pic_id)\
             .order_by('-filename').first()
 
     meta = {

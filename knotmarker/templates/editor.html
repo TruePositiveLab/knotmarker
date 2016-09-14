@@ -33,6 +33,11 @@
                 </div>
             </div>
         {% endif %}
+        <div class="row">
+            <div class="col-sm-12">
+                <h5>{{ pic_filename }}</h5>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-sm-12">
@@ -87,13 +92,13 @@
         </div>
         <div class="row">
             {% if prev_pic %}
-                <a class="btn btn-lg" href="/pic/{{ prev_pic }}/{{ user_id }}" data-bind="click: nextPage">Предыдущая</a>
+                <a class="btn btn-lg" href="/pic/{{ prev_pic.id }}/{{ user_id }}" data-bind="click: nextPage">Предыдущая</a>
             {% endif %}
             {% if next_pic %}
-                <a class="btn btn-lg" href="/pic/{{ next_pic }}/{{ user_id }}" data-bind="click: nextPage">Следующая</a>
+                <a class="btn btn-lg" href="/pic/{{ next_pic.id }}/{{ user_id }}" data-bind="click: nextPage">Следующая</a>
             {% endif %}
             {% if next_pic_without_markup and user_email == '' %}
-                <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup }}/{{ user_id }}" data-bind="click: nextPage">Следующая без разметки</a>
+                <a class="btn btn-lg" href="/pic/{{ next_pic_without_markup.id }}/{{ user_id }}" data-bind="click: nextPage">Следующая без разметки</a>
             {% endif %}
         </div>
     </div>

@@ -3,8 +3,9 @@ import { ViewModel } from "viewmodel";
 
 export class GalleryViewModel extends ViewModel {
     imgsPerPage: KnockoutObservable<number>;
-    galleryUrlTempl: string =  '/gallery?page=1&cnt=';
+    currCategory: KnockoutObservable<string>;
     imgsPerPageKey: string = 'imgsPerPage';
+    currCategoryKey: string = 'currCategory';
     defaultImgsCnt: number = 20;
     htmlElemName: string = 'galleryVM';
 
@@ -12,7 +13,9 @@ export class GalleryViewModel extends ViewModel {
         super();
         let cnt = this.getImgsPerPageCnt();
         this.imgsPerPage = ko.observable(cnt);
+        this.currCategory = ko.observable(this.getCurrCategory());
         this.imgsPerPage.subscribe(newVal => this.setImgsPerPageCnt(newVal));
+        this.currCategory.subscribe(newVal => this.setCurrCategory(newVal));
     }
 
     getImgsPerPageCnt(){
@@ -20,14 +23,22 @@ export class GalleryViewModel extends ViewModel {
     }
 
     setImgsPerPageCnt(newVal: number){
-        console.log(newVal);
         if (newVal >= 20) {
             localStorage.setItem(this.imgsPerPageKey, newVal.toString());
         }
     }
 
+    setCurrCategory(newVal: string){
+        localStorage.setItem(this.currCategoryKey, newVal);
+    }
+
+    getCurrCategory(){
+        return localStorage.getItem(this.currCategoryKey)||'';
+    }
+
     reload(){
-        window.location.href = this.galleryUrlTempl + this.imgsPerPage();
+
+        window.location.href = `/gallery?page=1&cnt=${this.imgsPerPage()}&cat=${this.currCategory()}`;
     }
 }
 

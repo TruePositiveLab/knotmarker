@@ -16,10 +16,20 @@
 {%block  content %}
     <div class="row" id="galleryVM">
         <div class="row">
-            <div class="col-sm-3">
-                <h2 style="margin-top: 0">Галерея</h2>
+            <div class="col-sm-2">
+                <h2 style="margin-top: 0">Категория:</h2>
             </div>
-            <div class="col-sm-1 col-sm-offset-8">
+            <div class="col-sm-2">
+                <select data-bind="value: currCategory, event: { change: reload }" class="form-control">
+                    {% for category in categories %}
+                        <option value={{ category.id }}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <h4><small>{{ curr_category.description }}</small></h4>
+            </div>
+            <div class="col-sm-1 col-sm-offset-5">
                 <select data-bind="value: imgsPerPage, event: { change: reload }" class="form-control">
                     <option value=20>20</option>
                     <option value=40>40</option>
@@ -42,9 +52,9 @@
                                 {% set col_cnt = 6 %}
                             {% endif %}
                             <div class="pic-info-border">
-                                <a href="/pic/{{ pic }}/{{ current_user.id }}" class="col-md-{{ col_cnt }} thumbnail {{ pic_css }}">
-                                    <img src="/pic/thumb/{{ pic }}.png">
-                                    <p class="text-center">{{ pic }}</p>
+                                <a href="/pic/{{ pic.id }}/{{ current_user.id }}" class="col-md-{{ col_cnt }} thumbnail {{ pic_css }}">
+                                    <img src="/pic/thumb/{{ pic.id }}.png">
+                                    <p class="text-center">{{ pic.filename }}</p>
                                 </a>
                                 {% if  pic.users_polygons | length > 0 %}
                                     <div class="col-md-{{ col_cnt }}">
@@ -52,7 +62,7 @@
                                         <ol class="users-list">
                                             {% for poly in pic.users_polygons %}
                                                 <li>
-                                                    <a href="/pic/{{ pic }}/{{ poly.user.id }}">{{ poly.user.email | trim_email }}</a>
+                                                    <a href="/pic/{{  pic.id }}/{{ poly.user.id }}">{{ poly.user.email | trim_email }}</a>
                                                 </li>
                                             {% endfor %}
                                         </ol>
@@ -62,9 +72,9 @@
                                 {% endif %}
                             </div>
                     {% else %}
-                        <a href="/pic/{{ pic }}/{{ current_user.id }}" class="thumbnail {{ pic_css }}">
-                            <img src="/pic/thumb/{{ pic }}.png">
-                            <p class="text-center">{{ pic }}</p>
+                        <a href="/pic/{{ pic.id }}/{{ current_user.id }}" class="thumbnail {{ pic_css }}">
+                            <img src="/pic/thumb/{{ pic.id }}.png">
+                            <p class="text-center">{{  pic.filename  }}</p>
                         </a>
                     {% endif %}
                 </div>

@@ -7,8 +7,8 @@ from flask.ext.script import Command
 from flask.ext.script import Option
 from PIL import Image
 
-from knotmarker.models import MarkedUpImage
-from knotmarker.models import Rect
+from knotmarker.models import MarkedUpImage, Rect, Category
+from mongoengine import DoesNotExist
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +32,16 @@ class Grab(Command):
 
     option_list = (
         Option('--dirpath', '-d', dest='dir_path', help='Source directory'),
+        Option('--category', '-c', dest='category_name', help='Category name')
     )
 
-    def run(self, dir_path):
+    def run(self, dir_path, category_name):
         kmarks = glob.glob(os.path.join(dir_path, '*.kmark'))
-
+        try:
+            curr_cat = Category.objects().get(name=category_name)
+        except DoesNotExist:
+            print("\'{0}\' does not exist!".format(category_name))
+            return
         boards_coords = []
         for kmark in kmarks:
             logger.info("Reading kmark %s", kmark)
@@ -74,4 +79,5 @@ class Grab(Command):
                               y=coordobj.y,
                               w=coordobj.w,
                               h=coordobj.h)
+            image.category = curr_cat
             image.save()

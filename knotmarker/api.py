@@ -79,7 +79,7 @@ class PolygonsByImage(Resource):
             return {
                 'status': 'ok',
                 'polygons': res,
-                'rect': MarkedUpImage.objects(filename=pic_id).first().rect
+                'rect': MarkedUpImage.objects(id=pic_id).first().rect
             }
 
         for up in image.users_polygons:
