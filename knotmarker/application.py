@@ -50,6 +50,10 @@ app.config['MONGODB_PORT'] = dotenv.get('KNOTMARKER_MONGODB_PORT', 27017)
 app.config["SECRET_KEY"] = bytes(dotenv.get('KNOTMARKER_SECRET_KEY'), 'utf8')
 app.config["SECURITY_REGISTERABLE"] = True
 app.config["SECURITY_CONFIRMABLE"] = True
+app.config["SECURITY_RECOVERABLE"] = True
+app.config["SECURITY_CHANGEABLE"] = True
+app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
+app.config['SECURITY_PASSWORD_SALT'] = bytes(dotenv.get('KNOTMARKER_PASSWORD_SALT'), 'utf8')
 
 SENTRY_DSN = dotenv.get('KNOTMARKER_SENTRY_DSN', None)
 

@@ -4,6 +4,7 @@ from flask.ext.security import current_user
 
 
 class UserModelView(ModelView):
+    column_exclude_list = ['password']
     def is_accessible(self):
         return current_user.has_role('admin')
 

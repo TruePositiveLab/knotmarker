@@ -64,6 +64,9 @@
                         </li>
                     {% endif %}
                     <li>
+                      <a href="{{ url_for_security('change_password') }}">Смена пароля</a>
+                    </li>
+                    <li>
                       <a href="{{ url_for_security('logout') }}">Выйти</a>
                     </li>
                 {% endif %}
