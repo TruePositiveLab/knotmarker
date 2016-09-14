@@ -144,12 +144,7 @@ export class EditorViewModel extends ViewModel {
     }
 
     addPoly() {
-        this.polygons.push({
-            "type": "unknown",
-            "stroke_color": this.getNewColor(),
-            "points": [],
-            "center": new Point(0, 0)
-        });
+        this.polygons.push(new Polygon(this.getNewColor()));
         this.currDefect(this.polygons().slice(-1)[0]);
     };
 
@@ -269,6 +264,7 @@ export class EditorViewModel extends ViewModel {
 
         this.polyStarted = true;
         this.svg.on("mousemove", () => this.mousemove());
+        d3.select("body").on("click", () => null);
         this.startPoint = this.getCurrMousePoint();
 
         d3.event.stopPropagation();
@@ -516,7 +512,7 @@ export class EditorViewModel extends ViewModel {
             this.currDefect().updateCenter();
             this.updatePolygons();
             d3.event.stopPropagation();
-
+            d3.select("body").on("click", () => this.onBodyClick());
         } else {
             if (this.currDefect() === undefined)
                 return;
