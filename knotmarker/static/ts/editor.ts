@@ -217,14 +217,15 @@ export class EditorViewModel extends ViewModel {
 
         this.polygons(polygons);
         this.updatePolygons();
-        // this.currDefect(this.polygons()[0]);
+        // if(this.polygons().length > 0)
+        //     this.currDefect(this.polygons()[0]);
         this.canSave(false);
 
-        let body = d3.select("body");
-        body.on("keydown", () => this.onBodyKeydown());
-        body.on("wheel", () => this.onBodyWheel());
-        body.on("click", () => this.onBodyClick());
-        body.node().focus();
+        let picRow = d3.select("#picRow");
+        picRow.on("keydown", () => this.onPicRowKeydown());
+        picRow.on("wheel", () => this.onPicRowWheel());
+        picRow.on("click", () => this.onPicRowClick());
+        picRow.node().focus();
     };
 
     drawEllipse(cx: number, cy: number, halfWidth: number, halfHeight: number){
@@ -264,7 +265,7 @@ export class EditorViewModel extends ViewModel {
 
         this.polyStarted = true;
         this.svg.on("mousemove", () => this.mousemove());
-        d3.select("body").on("click", () => null);
+        d3.select("#picRow").on("click", () => null);
         this.startPoint = this.getCurrMousePoint();
 
         d3.event.stopPropagation();
@@ -334,7 +335,7 @@ export class EditorViewModel extends ViewModel {
         this.canSave(true);
     }
 
-    onBodyKeydown(){
+    onPicRowKeydown(){
         if(this.currDefect() === undefined)
             return;
         if(d3.event.key == "Escape" && confirm('Удалить текущий полигон?'))
@@ -356,7 +357,7 @@ export class EditorViewModel extends ViewModel {
         }
     }
 
-    onBodyWheel() {
+    onPicRowWheel() {
         if(this.currDefect() === undefined)
             return;
         let angle = d3.event.deltaY < 0 ? this.rotationAngleStep : -this.rotationAngleStep;
@@ -365,7 +366,7 @@ export class EditorViewModel extends ViewModel {
         d3.event.stopPropagation();
     }
 
-    onBodyClick() {
+    onPicRowClick() {
         if(!d3.event.defaultPrevented){
             this.currDefect(undefined);
             d3.event.stopPropagation();
@@ -512,7 +513,7 @@ export class EditorViewModel extends ViewModel {
             this.currDefect().updateCenter();
             this.updatePolygons();
             d3.event.stopPropagation();
-            d3.select("body").on("click", () => this.onBodyClick());
+            d3.select("#picRow").on("click", () => this.onPicRowClick());
         } else {
             if (this.currDefect() === undefined)
                 return;
