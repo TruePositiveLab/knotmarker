@@ -106,17 +106,17 @@ class MarkedUpImage(db.Document):
         return queryset.filter(id=pic_id)
 
     @queryset_manager
-    def next_image(cls, queryset, pic_id,
+    def next_image(cls, queryset, filename, category,
                    current_user=None, without_markup=False):
-        qs = queryset.filter(id__gt=pic_id)
+        qs = queryset.filter(filename__gt=filename, category=category)
         if without_markup:
             qs = qs.filter(
                 Q(users_polygons__not__match={"user": current_user}))
         return qs.first()
 
     @queryset_manager
-    def previous_image(cls, queryset, pic_id):
-        return queryset.filter(id__lt=pic_id)\
+    def previous_image(cls, queryset, filename, category):
+        return queryset.filter(filename__lt=filename, category=category)\
             .order_by('-filename').first()
 
     meta = {

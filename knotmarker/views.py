@@ -46,11 +46,13 @@ def gallery():
 @login_required
 def edit_image(pic_id, user_id):
     if str(current_user.id) == user_id or current_user.has_role('admin'):
-        next_pic_wo_markup = MarkedUpImage.next_image(pic_id,
+        markedup_image = MarkedUpImage.image_by_id(pic_id).first()
+        category = markedup_image.category
+        filename = markedup_image.filename
+        next_pic_wo_markup = MarkedUpImage.next_image(filename,
+                                                      category,
                                                       current_user,
                                                       without_markup=True)
-        markedup_image = MarkedUpImage.image_by_id(pic_id).first()
-
         user_email = ''
         if current_user.has_role('admin') and str(current_user.id) != user_id:
             user_email = User.objects.filter(id=user_id).first().email
@@ -58,8 +60,8 @@ def edit_image(pic_id, user_id):
         context = {
             'pic_id': pic_id,
             'user_id': user_id,
-            'next_pic': MarkedUpImage.next_image(pic_id),
-            'prev_pic': MarkedUpImage.previous_image(pic_id),
+            'next_pic': MarkedUpImage.next_image(filename, category),
+            'prev_pic': MarkedUpImage.previous_image(filename, category),
             'next_pic_without_markup': next_pic_wo_markup,
             'users_polygons': markedup_image.users_polygons,
             'user_email': user_email,
