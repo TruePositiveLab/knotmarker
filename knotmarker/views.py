@@ -1,5 +1,5 @@
 from flask import make_response
-from flask import render_template
+from flask import render_template, redirect, url_for
 from flask import request
 from flask.ext.security import current_user
 from flask.ext.security import login_required
@@ -22,6 +22,12 @@ def gallery():
     cat_id = request.args.get('cat')
     if cat_id is None or cat_id == '':
         curr_cat = Category.objects.first()
+        args = {
+            'page': page_num,
+            'cnt': pcs_per_page,
+            'cat': curr_cat.id
+        }
+        return redirect(url_for('gallery', **args))
     else:
         curr_cat = Category.objects.get(id=cat_id)
     pics_in_cat = MarkedUpImage.objects().filter(category=curr_cat)
