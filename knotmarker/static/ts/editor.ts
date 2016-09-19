@@ -265,6 +265,23 @@ export class EditorViewModel extends ViewModel {
         let polylines = this.svg.selectAll("polygon")
             .data(polygons);
         polylines.style("opacity", opacity);
+
+        let currPoly = this.currDefect();
+        if(currPoly !== undefined)
+            this.polygonCirclesGroup(currPoly)
+                .selectAll("circle")
+                .data(currPoly.points)
+                .style("opacity", opacity);
+    }
+
+    polygonCirclesGroup(polygon: any){
+        let ind: number = this.polygons.indexOf(polygon);
+        let groupId: string = "poly"+ind;
+        let group = this.svg.select(`#${groupId}`);
+        if(group.empty())
+            group =  this.svg.append("g").attr("id", groupId);
+
+        return group;
     }
 
     createPolygon(){
@@ -296,15 +313,7 @@ export class EditorViewModel extends ViewModel {
 
     updateCircles(polygon: any) {
         //we select group which contains points(circles) of current polygon
-        let ind: number = this.polygons.indexOf(polygon);
-        let groupId: string = "#poly"+ind;
-        let group = this.svg.select(groupId);
-
-        if(group.empty())
-        {
-            this.svg.append("g").attr("id", groupId.substring(1));
-            group =  this.svg.select(groupId);
-        }
+        let group = this.polygonCirclesGroup(polygon);
 
         let circles = group
                     .selectAll("circle")
