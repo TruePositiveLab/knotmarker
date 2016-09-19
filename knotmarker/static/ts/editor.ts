@@ -231,7 +231,7 @@ export class EditorViewModel extends ViewModel {
 
         let picRow = d3.select("#picRow");
         picRow.on("keydown", () => this.onPicRowKeydown());
-        picRow.on("wheel", () => this.onPicRowWheel());
+        this.svg.on("wheel", () => this.onPicRowWheel());
         picRow.on("click", () => this.onPicRowClick());
         picRow.node().focus();
     };
