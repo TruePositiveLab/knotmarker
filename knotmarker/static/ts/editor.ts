@@ -162,6 +162,7 @@ export class EditorViewModel extends ViewModel {
                 .selectAll("g[id^='poly']")
                 .remove();
         this.updatePolygons();
+        this.canSave(true);
     };
 
     getNewColor(): any {
