@@ -86,7 +86,8 @@
                     <button class="btn btn-lg" data-bind="event: { mousedown: polygonsOpacity.bind($data, 0), mouseup: polygonsOpacity.bind($data, 1) }">Спрятать разметку</button>
                 </div>
                 <div class="row" style="margin-top: 10px">
-                    <button class="btn btn-lg btn-danger " data-bind="click: clearChanges" style="margin-top: 50px">Сбросить</button>
+                    <button class="btn btn-lg btn-danger " data-bind="click: clearChanges" style="margin-top: 50px">Сбросить последние изменения</button>
+                    <button class="btn btn-lg btn-danger " data-bind="click: deleteAllPolygons" style="margin-top: 10px">Сбросить все</button>
                 </div>
             </div>
         </div>

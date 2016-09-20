@@ -97,9 +97,11 @@ export class EditorViewModel extends ViewModel {
         this.userId = user_id;
         this.newType.subscribe(newVal => {
             if (newVal !== "") {
+                newVal = newVal.charAt(0).toUpperCase() + newVal.substring(1).toLowerCase()
                 this.addNewPolygonType(newVal);
                 this.currDefect().type = newVal;
                 this.polygons(this.polygons());
+                this.currType(this.currDefect().type);
                 this.canSave(true);
             }
         });
@@ -605,8 +607,28 @@ export class EditorViewModel extends ViewModel {
     };
 
     clearChanges() {
-        this.loadPolygons();
+        if(confirm('Вы действительно хотите сбросить последние изменения?'))
+        {
+            this.loadPolygons();
+        }
     };
+
+    deleteAllPolygons() {
+        if(confirm('Вы действительно хотите удалить всю разметку?'))
+        {
+            d3.json(`/pic/${ this.picId }/${ this.userId }/polygons`)
+                .send('DELETE', (error, data) => this.deleteAllPolygonsCallback(error, data));
+        }
+    }
+
+    deleteAllPolygonsCallback(error: any, data: any) {
+        if(error) {
+            alert('Произошла ошибка!');
+            return
+        }
+        console.log(data)
+        this.loadPolygons();
+    }
 
     polygonTypeName(value: any) {
         let name = this.polygonTypeToNameMapping()[value.type];

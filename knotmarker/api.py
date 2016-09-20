@@ -99,6 +99,21 @@ class PolygonsByImage(Resource):
         return polygons
 
     @login_required
+    def delete(self, pic_id: str, user_id: str) -> Dict[str, Any]:
+        try:
+            image = MarkedUpImage.polygons(pic_id, user_id).first()
+            new_users_polygons = []
+            for up in image.users_polygons:
+                if str(up.user.id) != user_id:
+                    new_users_polygons.append(up)
+
+            image.users_polygons = new_users_polygons
+            image.save()
+        except:
+            return {'status': 'error'}, 500
+        return {'status': 'ok'}, 200
+
+    @login_required
     def post(self, pic_id: str, user_id: str) -> Dict[str, Any]:
         # TODO: request validation
         image = MarkedUpImage.polygons(pic_id, user_id).first()

@@ -71,12 +71,14 @@ class PolygonType(db.Document):
             curr_user = user
             if type in system_types:
                 curr_user = system_user
-
-            PolygonType \
-                .objects(name=type)\
-                .upsert_one(set__creator=curr_user,
-                            set__readable_name=type,
-                            inc__popularity=types_counter[type])
+            r_name = type
+            poly_type_q = PolygonType.objects(name=type)
+            poly_type = poly_type_q.first()
+            if poly_type is not None:
+                r_name = poly_type.readable_name
+            poly_type_q.upsert_one(set__creator=curr_user,
+                                   set__readable_name=r_name,
+                                   inc__popularity=types_counter[type])
 
     @queryset_manager
     def active_types(self, queryset):
