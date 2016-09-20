@@ -14,7 +14,7 @@ from flask_restful import Resource
 from .application import app
 from .models import MarkedUpImage
 from .models import Polygon
-from .models import PolygonType
+from .models import PolygonType, User
 
 api = Api(app)
 
@@ -29,13 +29,13 @@ polygon_types_fields = {
 
 
 class PolygonTypes(Resource):
-
     @login_required
     @marshal_with(polygon_types_fields)
     def get(self) -> Any:
         return {
             'types': PolygonType.active_types()
         }
+
 
 point_fields = {
     'x': fields.Integer,
@@ -68,7 +68,6 @@ def stroke_color(value: Any) -> str:
 
 
 class PolygonsByImage(Resource):
-
     @login_required
     @marshal_with(polygons_by_image_fields)
     def get(self, pic_id: str, user_id: str) -> Dict[str, Any]:
@@ -102,21 +101,32 @@ class PolygonsByImage(Resource):
     @login_required
     def post(self, pic_id: str, user_id: str) -> Dict[str, Any]:
         # TODO: request validation
-        polygons = MarkedUpImage.polygons(pic_id, user_id)
+        image = MarkedUpImage.polygons(pic_id, user_id).first()
 
-        if len(polygons) == 0:
+        if image is None:
             MarkedUpImage.image_by_id(pic_id).upsert_one(
                 add_to_set__users_polygons={'user': user_id})
-            polygons = MarkedUpImage.polygons(pic_id, user_id)
+            image = MarkedUpImage.polygons(pic_id, user_id).first()
 
         updated_polygons = self.to_polygons(request.json)
-
         types_counter = Counter(p.type for p in updated_polygons)
 
-        polygons.upsert_one(
-            set__users_polygons__S__polygons=updated_polygons)
+        for up in image.users_polygons:
+            if str(up.user.id) == user_id:
+                res = up.polygons
+                break
+
+        types_counter_prev = Counter(p.type for p in res)
+        types_counter.subtract(types_counter_prev)
+
+        PolygonType.update_popularity(types_counter, user_id)
+
+        MarkedUpImage\
+            .polygons(pic_id, user_id)\
+            .upsert_one(set__users_polygons__S__polygons=updated_polygons)
 
         return {'status': 'ok'}
+
 
 api.add_resource(PolygonTypes, '/polygon_types')
 api.add_resource(PolygonsByImage, '/pic/<string:pic_id>/<string:user_id>/polygons')

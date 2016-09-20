@@ -97,8 +97,10 @@ export class EditorViewModel extends ViewModel {
         this.userId = user_id;
         this.newType.subscribe(newVal => {
             if (newVal !== "") {
+                this.addNewPolygonType(newVal);
                 this.currDefect().type = newVal;
                 this.polygons(this.polygons());
+                this.canSave(true);
             }
         });
 
@@ -108,13 +110,13 @@ export class EditorViewModel extends ViewModel {
             this.currDefect().type = newVal;
             this.newType("");
             this.polygons(this.polygons());
+            this.canSave(true);
         });
 
         this.currDefect.subscribe(newVal => {
             if (newVal !== undefined) {
                 this.currType(newVal.type);
                 this.highlightPolygon(newVal);
-                this.canSave(true);
             } else {
                 this.disablePolygonHighlight();
             }
@@ -136,6 +138,22 @@ export class EditorViewModel extends ViewModel {
         }, this);
     }
 
+    addNewPolygonType(newVal: string){
+        let types = this.polygonTypes();
+
+        let exists = false;
+        for(let i = 0; i < types.length; i++)
+            if(types[i].type == newVal)
+                exists = true;
+
+        if(!exists){
+            let new_type = {'readable_name': newVal,
+                        'type': newVal};
+            types.push(new_type);
+            this.polygonTypes(types);
+        }
+    }
+
     disablePolygonHighlight(){
         this.svg
             .selectAll("g[id^='poly']")
@@ -152,6 +170,7 @@ export class EditorViewModel extends ViewModel {
             this.drawEllipse(rect.width/2, this.scaleY(rect.height/2), halfWidth, halfWidth);
             this.updatePolygons()
         }
+        this.canSave(true);
     };
 
     delPoly() {
@@ -220,7 +239,8 @@ export class EditorViewModel extends ViewModel {
                 let pt = poly.points[j];
                 points.push(new Point(pt.x, pt.y));
             }
-            polygons.push(new Polygon(poly.stroke_color, poly.type, points, center))
+            polygons.push(new Polygon(poly.stroke_color, poly.type, points, center));
+            this.addNewPolygonType(poly.type);
         }
 
         this.polygons(polygons);

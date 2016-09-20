@@ -84,7 +84,7 @@ def inject_user():
 db = MongoEngine(app)
 
 #
-from .models import User, Role, Category  # noqa
+from .models import User, Role, Category, PolygonType  # noqa
 user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
@@ -92,6 +92,7 @@ admin = admin.Admin(app, 'Knotmarker', index_view=AdminIndexView(), template_mod
 admin.add_view(UserModelView(User))
 admin.add_view(UserModelView(Role))
 admin.add_view(UserModelView(Category))
+admin.add_view(UserModelView(PolygonType))
 
 from .forms import *  # noqa
 from .views import *  # noqa

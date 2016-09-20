@@ -29,36 +29,7 @@ class Polygon(db.EmbeddedDocument):
     meta = {'strict': False}
 
 
-class PolygonType(db.Document):
-    readable_name = db.StringField(required=True, unique=True)
-    name = db.StringField(required=True, unique=True)
-    creator = db.StringField(required=True)
-    popularity = db.LongField(default=0)
-
-    meta = {
-        'indexes': ['-popularity'],
-    }
-
-    @queryset_manager
-    def active_types(self, queryset):
-        """Returns all system-defined types with most popular user-defined
-
-        :queryset: queryset to filter
-        :returns: 'active' types
-
-        """
-        return queryset.filter(Q(creator='system') | Q(popularity__gt=5))
-
-
 class Role(db.Document, RoleMixin):
-    name = db.StringField(max_length=80, unique=True)
-    description = db.StringField(max_length=255)
-
-    def __unicode__(self):
-        return self.name
-
-
-class Category(db.Document):
     name = db.StringField(max_length=80, unique=True)
     description = db.StringField(max_length=255)
 
@@ -72,6 +43,59 @@ class User(db.Document, UserMixin):
     active = db.BooleanField(default=True)
     confirmed_at = db.DateTimeField()
     roles = db.ListField(db.ReferenceField(Role), default=[], )
+
+    def __unicode__(self):
+        return self.email
+
+
+class PolygonType(db.Document):
+    readable_name = db.StringField(required=True, unique=True)
+    name = db.StringField(required=True, unique=True)
+    creator = db.ReferenceField(User, required=True)
+    popularity = db.LongField(default=0)
+
+    meta = {
+        'indexes': ['-popularity'],
+    }
+
+    @queryset_manager
+    def update_popularity(self, queryset, types_counter, user_id):
+        user = User.objects().get(id=user_id)
+        system_user = User.objects().get(email='system')
+        system_types = list(map(lambda x: x.name,
+                                PolygonType
+                                .objects(creator=system_user)
+                                .only('name')))
+
+        for type in types_counter:
+            curr_user = user
+            if type in system_types:
+                curr_user = system_user
+
+            PolygonType \
+                .objects(name=type)\
+                .upsert_one(set__creator=curr_user,
+                            set__readable_name=type,
+                            inc__popularity=types_counter[type])
+
+    @queryset_manager
+    def active_types(self, queryset):
+        """Returns all system-defined types with most popular user-defined
+
+        :queryset: queryset to filter
+        :returns: 'active' types
+
+        """
+        system_user = User.objects().get(email='system')
+        return queryset.filter(Q(creator=system_user) | Q(popularity__gt=5))
+
+
+class Category(db.Document):
+    name = db.StringField(max_length=80, unique=True)
+    description = db.StringField(max_length=255)
+
+    def __unicode__(self):
+        return self.name
 
 
 class UserPolygon(db.EmbeddedDocument):
