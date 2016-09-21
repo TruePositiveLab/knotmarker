@@ -127,7 +127,6 @@ export class EditorViewModel extends ViewModel {
         this.undoManager = new UndoManager();
         this.undoManager.setCallback(() => this.onUndoManagerUpdate());
         this.loadPolygonTypes();
-        this.loadPolygons();
 
         this.polygonTypeToNameMapping = ko.computed(function() {
             let mapping: any = {},
@@ -205,7 +204,10 @@ export class EditorViewModel extends ViewModel {
     };
 
     loadPolygonTypes() {
-        d3.json("/polygon_types", json => this.polygonTypes(json.types));
+        d3.json("/polygon_types", json => {
+            this.polygonTypes(json.types);
+            this.loadPolygons();
+        });
     };
 
     loadPolygons() {
