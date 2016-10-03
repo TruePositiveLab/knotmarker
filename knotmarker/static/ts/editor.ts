@@ -216,6 +216,24 @@ export class EditorViewModel extends ViewModel {
 
     initPolygons(json: any) {
         let boardRect = json.rect;
+        this.width = json.width;
+        this.height = json.height;
+        this.scaleX = d3.scale.linear()
+            .domain([0, this.width])
+            .range([0, this.width]);
+
+        this.scaleY = d3.scale.linear()
+            .domain([0, this.height])
+            .range([this.height, 0]);
+
+        this.mouseScaleX = d3.scale.linear()
+            .domain([0, this.width])
+            .range([0, this.width]);
+
+        this.mouseScaleY = d3.scale.linear()
+            .domain([this.height, 0])
+            .range([0, this.height]);
+
         d3.selectAll("svg > *").remove();
         this.svg = d3.select("body")
             .select("#svgPlace")
@@ -241,7 +259,7 @@ export class EditorViewModel extends ViewModel {
             let points: Array<Point> = [];
             for(let j = 0; j < poly.points.length; j++){
                 let pt = poly.points[j];
-                points.push(new Point(pt.x, pt.y));
+                points.push(new Point(pt.x, this.mouseScaleY(pt.y)));
             }
             polygons.push(new Polygon(poly.stroke_color, poly.type, points, center));
             this.addNewPolygonType(poly.type);
@@ -600,6 +618,15 @@ export class EditorViewModel extends ViewModel {
     };
 
     savePolygons() {
+        let polygons: Array<Polygon> = this.polygons();
+        for(let i = 0; i < polygons.length; i++){
+            let poly = polygons[i];
+            poly.center.y = this.mouseScaleY(poly.center.y);
+            for(let j = 0; j < poly.points.length; j++){
+                let pt = poly.points[j];
+                pt.y = this.mouseScaleY(pt.y);
+            }
+        }
         d3.json(`/pic/${ this.picId }/${ this.userId }/polygons`)
             .header("Content-Type", "application/json")
             .post(JSON.stringify(this.polygons()), function(error, data) {
@@ -628,7 +655,6 @@ export class EditorViewModel extends ViewModel {
             alert('Произошла ошибка!');
             return
         }
-        console.log(data)
         this.loadPolygons();
     }
 

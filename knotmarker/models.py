@@ -114,6 +114,8 @@ class MarkedUpImage(db.Document):
     created_at = db.DateTimeField(default=utcnow, required=True)
     filename = db.StringField(max_length=255, required=True)
     image = db.FileField()
+    width = db.IntField()
+    height = db.IntField()
     image_thumbnail = db.FileField()
     rect = db.EmbeddedDocumentField('Rect')
     users_polygons = db.ListField(db.EmbeddedDocumentField('UserPolygon'))

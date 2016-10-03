@@ -2,7 +2,6 @@
     background-color: lightgreen;
 }
 .thumbnail > img {
-    height: 150px;
     width: 150px;
 }
 .users-list {

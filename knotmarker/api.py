@@ -59,7 +59,9 @@ rect_fields = {
 polygons_by_image_fields = {
     'status': fields.String,
     'polygons': fields.List(fields.Nested(polygon_fields)),
-    'rect': fields.Nested(rect_fields)
+    'rect': fields.Nested(rect_fields),
+    'width': fields.Integer,
+    'height': fields.Integer
 }
 
 
@@ -75,10 +77,13 @@ class PolygonsByImage(Resource):
         res = []  # type: Iterable[Any]
 
         if image is None:
+            image = MarkedUpImage.objects(id=pic_id).first()
             return {
                 'status': 'ok',
                 'polygons': res,
-                'rect': MarkedUpImage.objects(id=pic_id).first().rect
+                'width': image.width,
+                'height': image.height,
+                'rect': image.rect
             }
 
         for up in image.users_polygons:
@@ -89,7 +94,9 @@ class PolygonsByImage(Resource):
         return {
             'status': 'ok',
             'polygons': res,
-            'rect': image.rect
+            'rect': image.rect,
+            'width': image.width,
+            'height': image.height
         }
 
     def to_polygons(self, json: Iterable[Any]) -> Iterable[Polygon]:
