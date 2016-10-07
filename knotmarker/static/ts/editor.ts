@@ -397,7 +397,7 @@ export class EditorViewModel extends ViewModel {
     onPicRowKeydown(){
         if(this.currDefect() === undefined)
             return;
-        if(d3.event.key == "Escape" && confirm('Удалить текущий полигон?'))
+        if(d3.event.keyCode == 27 && confirm('Удалить текущий полигон?'))
         {
             this.delPoly();
             this.svg.on("mousemove", null);
@@ -546,7 +546,7 @@ export class EditorViewModel extends ViewModel {
     startPoint: any;
     endPoint: any;
     createPoint(ignoreEvent: boolean = false) {
-        if (d3.event.ctrlKey || ignoreEvent) {
+        if ((d3.event.ctrlKey || d3.event.metaKey) || ignoreEvent) {
             let newPoint = this.getCurrMousePoint();
             let points = this.currDefect().points;
             let minDist = this.width;
