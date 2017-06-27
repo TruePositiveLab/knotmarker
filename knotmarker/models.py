@@ -13,6 +13,12 @@ class Point(db.EmbeddedDocument):
     x = db.FloatField(required=True)
     y = db.FloatField(required=True)
 
+    def __add__(self, x):
+        return Point(x=self.x + x.x, y=self.y+x.y)
+
+    def __truediv__(self, n):
+        return Point(x=self.x/n, y=self.y/n)
+
 
 class Rect(db.EmbeddedDocument):
     x = db.FloatField(required=True)

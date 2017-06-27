@@ -4,10 +4,12 @@
         "sourceMap": true,
         "noImplicitAny": true,
         "module": "amd",
-        "target": "es5"
+        "target": "es5",
+        "typeRoots": [
+            "./static/js/external/node_modules/@types"
+        ]
     },
     "files": [
-        "./static/typings/index.d.ts",
         "./static/ts/require-config.ts",
         "./static/ts/nav.ts",
         "./static/ts/gallery.ts",

@@ -10,6 +10,9 @@
     "requirejs": "~2.2.0",
     "undo-manager": "~1.0.5",
     "randomcolor": "~0.4.4",
-    "raven-js": "~3.0.4"
+    "raven-js": "~3.0.4",
+    "@types/d3": "~3.5.16",
+    "@types/knockout": "~3.4.0",
+    "@types/jquery": "~1.10.0"
   }
 }

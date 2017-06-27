@@ -78,6 +78,18 @@ class PolygonsByImage(Resource):
 
         if image is None:
             image = MarkedUpImage.objects(id=pic_id).first()
+
+            # no markup done by user
+            # return 'system' one instead
+            try:
+                system = User.objects.filter(email='system').first()
+                for up in image.users_polygons:
+                    if up.user.id == system.id:
+                        res = up.polygons
+                        break
+            except:
+                pass
+
             return {
                 'status': 'ok',
                 'polygons': res,

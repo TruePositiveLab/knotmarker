@@ -5,12 +5,13 @@ set -x
 
 apk add --no-cache  build-base \
     gettext \
+    git \
     jpeg-dev \
     libwebp-dev \
     libxml2-dev \
     python3-dev \
-    zlib-dev \
-    git
+    tini \
+    zlib-dev
 # install python requirements
 LIBRARY_PATH=/lib:/usr/lib \
 pip3 install \

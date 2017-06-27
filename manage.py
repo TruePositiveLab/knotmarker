@@ -3,7 +3,7 @@ from flask.ext.script import Manager
 from flask.ext.script import Server
 
 from knotmarker import app
-from knotmarker.commands import Grab
+from knotmarker.commands import Grab, Grab2
 from knotmarker.commands import TypesImporter
 from knotmarker.commands import AddSize
 dotenv.load()
@@ -19,6 +19,7 @@ manager.add_command("runserver", Server(
 )
 
 manager.add_command("grab", Grab())
+manager.add_command("grab2", Grab2())
 manager.add_command("import_types", TypesImporter())
 manager.add_command("add_size", AddSize())
 
