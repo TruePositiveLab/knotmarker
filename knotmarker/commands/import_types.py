@@ -3,7 +3,7 @@ import csv
 from flask.ext.script import Command
 from flask.ext.script import Option
 
-from knotmarker.models import PolygonType
+from knotmarker.models import PolygonType, User
 
 
 class TypesImporter(Command):
@@ -18,5 +18,6 @@ class TypesImporter(Command):
             reader = csv.DictReader(csv_file)
             for row in reader:
                 polygon_type = PolygonType(**row)
-                polygon_type.creator = 'system'
+                system_user = User.objects().get(email='system')
+                polygon_type.creator = system_user
                 polygon_type.save()

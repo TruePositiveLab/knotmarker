@@ -84,15 +84,34 @@ def inject_user():
 db = MongoEngine(app)
 
 #
-from .models import User, Role, Category, PolygonType  # noqa
+from .models import User, Role, Category, PolygonType, MarkedUpImage  # noqa
 user_datastore = MongoEngineUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
+
+@app.before_first_request
+def init():
+    import datetime
+    from .models import Category
+    admin_email = 'admin'
+    system_email = 'system'
+    admin_role = 'admin'
+    if not user_datastore.find_user(email=admin_email):
+        user_datastore.find_or_create_role(name=admin_role, description='Administrator')
+        user_datastore.create_user(email=admin_email, password='123456', confirmed_at=datetime.datetime.now())
+        user_datastore.create_user(email=system_email, password='123456', confirmed_at=datetime.datetime.now())
+        user_datastore.add_role_to_user(admin_email, admin_role)
+        user_datastore.add_role_to_user(system_email, admin_role)
+
+        defaul_cat = Category(name='default', description='default category')
+        defaul_cat.save()
+
 
 admin = admin.Admin(app, 'Knotmarker', index_view=AdminIndexView(), template_mode='bootstrap3')
 admin.add_view(UserModelView(User))
 admin.add_view(UserModelView(Role))
 admin.add_view(UserModelView(Category))
 admin.add_view(UserModelView(PolygonType))
+admin.add_view(UserModelView(MarkedUpImage))
 
 from .forms import *  # noqa
 from .views import *  # noqa

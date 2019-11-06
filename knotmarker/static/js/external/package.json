@@ -1,7 +1,7 @@
 {
   "name": "knotmarker_package",
   "version": "1.0.0",
-  "scripts":{
+  "scripts": {
     "install_typings": "cd ../../ && typings install --global --save dt~knockout dt~d3"
   },
   "dependencies": {
